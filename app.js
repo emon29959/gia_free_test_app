@@ -132,8 +132,8 @@ function generatePerceptualSpeedQuestions(count) {
     const usedSignatures = new Set();
 
     for (let i = 0; i < count; i++) {
-        // Vary pair count: mostly 4, sometimes 5 for harder questions
-        let numPairs = Math.random() > 0.75 ? 5 : 4;
+        // GIA standard: always exactly 4 pairs
+        let numPairs = 4;
         let pairs = [];
         let sameCount = 0;
         let displayStr = "";
@@ -176,9 +176,9 @@ function generatePerceptualSpeedQuestions(count) {
         if (usedSignatures.has(sig)) { i--; continue; }
         usedSignatures.add(sig);
 
-        let maxOpt = numPairs.toString();
+        // GIA standard: options are always 0-4
         let opts = [];
-        for (let k = 0; k <= numPairs; k++) opts.push(k.toString());
+        for (let k = 0; k <= 4; k++) opts.push(k.toString());
 
         questions.push({
             type: 'perceptual',
@@ -370,8 +370,8 @@ function generateSpatialQuestions(count) {
 
     const questions = [];
     for (let i = 0; i < count; i++) {
-        // Variable pair count: mostly 2, sometimes 3 for harder questions
-        let numPairs = Math.random() > 0.7 ? 3 : 2;
+        // GIA standard: always exactly 2 pairs
+        let numPairs = 2;
         let pairs = [];
         let matchCount = 0;
 
@@ -392,9 +392,8 @@ function generateSpatialQuestions(count) {
             if (isMatch) matchCount++;
         }
 
-        let maxOpt = numPairs;
-        let opts = [];
-        for (let k = 0; k <= maxOpt; k++) opts.push(k.toString());
+        // GIA standard: options are always 0-2
+        let opts = ['0', '1', '2'];
 
         questions.push({
             type: 'spatial',
@@ -450,7 +449,8 @@ let state = {
     
     timeValue: 0, // seconds elapsed or remaining
     timerInterval: null,
-    customTimeLimit: 0 // custom minutes set by user
+    customTimeLimit: 0, // custom minutes set by user
+    reasoningPhase: 'statement' // 'statement' or 'question' (Task 1 only)
 };
 
 // --- LOGIC ---
@@ -486,6 +486,7 @@ function startTask() {
     // Generate fresh questions and shuffle them for every new test
     state.questions = shuffleArray(questionGenerators[task.id]());
     state.currentQuestionIndex = 0;
+    state.reasoningPhase = 'statement';
     state.mode = 'test';
     
     // Timer setup
@@ -548,6 +549,7 @@ function handleAnswer(selected, correct) {
     });
     
     state.currentQuestionIndex++;
+    state.reasoningPhase = 'statement'; // Reset for next reasoning question
     if (state.currentQuestionIndex >= state.questions.length) {
         clearInterval(state.timerInterval);
         finishTask();
@@ -556,6 +558,13 @@ function handleAnswer(selected, correct) {
     }
 }
 window.handleAnswer = handleAnswer;
+
+// Task 1 Reasoning: transition from statement phase to question phase
+function reasoningReady() {
+    state.reasoningPhase = 'question';
+    render();
+}
+window.reasoningReady = reasoningReady;
 
 function finishTask() {
     state.currentTaskIndex++;
@@ -677,29 +686,80 @@ function render() {
         const qArea = document.createElement('div');
         qArea.className = 'center-content';
         
+        // ─── TASK 1: REASONING (Two-phase: Statement → Click → Question) ───
         if (q.type === 'reasoning') {
-            qArea.innerHTML = `
-                <div class="reasoning-statement">${q.statement}</div>
-                <div class="question-area">${q.question}</div>
-            `;
+            if (state.reasoningPhase === 'statement') {
+                // Phase 1: Show ONLY the statement. User clicks when ready.
+                qArea.innerHTML = `
+                    <div class="reasoning-statement">${q.statement}</div>
+                    <p style="color:#888; margin-top: 20px;">Study the statement above. Click when ready.</p>
+                    <button class="btn" onclick="reasoningReady()" style="margin-top: 20px;">Ready</button>
+                `;
+            } else {
+                // Phase 2: Statement DISAPPEARS. Show question + two answer options.
+                qArea.innerHTML = `<div class="question-area">${q.question}</div>`;
+                const optionsArea = document.createElement('div');
+                optionsArea.className = 'options-area';
+                q.options.forEach(opt => {
+                    const btn = document.createElement('div');
+                    btn.className = 'option-box';
+                    btn.innerText = opt;
+                    btn.onclick = () => handleAnswer(opt, q.answer);
+                    optionsArea.appendChild(btn);
+                });
+                qArea.appendChild(optionsArea);
+            }
+
+        // ─── TASK 2: PERCEPTUAL SPEED (4 pairs, answer 0-4) ───
         } else if (q.type === 'perceptual') {
-            let html = '<div class="question-area">How many pairs contain the same letters?</div><div class="perceptual-pairs">';
+            let html = '<div class="question-area">How many pairs contain the same letter?</div><div class="perceptual-pairs">';
             q.pairs.forEach(p => {
                 html += `<div class="perceptual-pair">${p[0]}<br>${p[1]}</div>`;
             });
             html += '</div>';
             qArea.innerHTML = html;
-        } else if (q.type === 'numbers') {
-            let html = '<div class="question-area">Which number (highest or lowest) is furthest from the remaining number?</div><div class="number-speed-box">';
-            q.numbers.forEach(n => {
-                html += `<div>${n}</div>`;
+            const optionsArea = document.createElement('div');
+            optionsArea.className = 'options-area';
+            q.options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'option-box';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, q.answer);
+                optionsArea.appendChild(btn);
             });
-            html += '</div>';
-            qArea.innerHTML = html;
+            qArea.appendChild(optionsArea);
+
+        // ─── TASK 3: NUMBER SPEED & ACCURACY (3 clickable numbers) ───
+        } else if (q.type === 'numbers') {
+            qArea.innerHTML = '';
+            const optionsArea = document.createElement('div');
+            optionsArea.className = 'options-area';
+            q.numbers.forEach(n => {
+                const btn = document.createElement('div');
+                btn.className = 'option-box';
+                btn.innerText = n;
+                btn.onclick = () => handleAnswer(n.toString(), q.answer);
+                optionsArea.appendChild(btn);
+            });
+            qArea.appendChild(optionsArea);
+
+        // ─── TASK 4: WORD MEANING (3 clickable words — click the odd one) ───
         } else if (q.type === 'word') {
-            qArea.innerHTML = '<div class="question-area">Which word is the odd one out?</div>';
+            qArea.innerHTML = '';
+            const optionsArea = document.createElement('div');
+            optionsArea.className = 'options-area';
+            q.options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'option-box';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, q.answer);
+                optionsArea.appendChild(btn);
+            });
+            qArea.appendChild(optionsArea);
+
+        // ─── TASK 5: SPATIAL VISUALISATION (2 pairs, answer 0-2) ───
         } else if (q.type === 'spatial') {
-            let html = '<div class="question-area">How many bottom symbols match the top symbol after rotation?</div><div class="spatial-pairs">';
+            let html = '<div class="spatial-pairs">';
             q.pairs.forEach(p => {
                 html += `<div class="spatial-pair">
                     <div class="spatial-symbol" style="transform: rotate(${p.rot1}deg)">${p.symbol}</div>
@@ -708,19 +768,18 @@ function render() {
             });
             html += '</div>';
             qArea.innerHTML = html;
+            const optionsArea = document.createElement('div');
+            optionsArea.className = 'options-area';
+            q.options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'option-box';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, q.answer);
+                optionsArea.appendChild(btn);
+            });
+            qArea.appendChild(optionsArea);
         }
         
-        const optionsArea = document.createElement('div');
-        optionsArea.className = 'options-area';
-        q.options.forEach(opt => {
-            const btn = document.createElement('div');
-            btn.className = 'option-box';
-            btn.innerText = opt;
-            btn.onclick = () => handleAnswer(opt, q.answer);
-            optionsArea.appendChild(btn);
-        });
-        
-        qArea.appendChild(optionsArea);
         screen.appendChild(qArea);
 
     } else if (state.mode === 'final') {
