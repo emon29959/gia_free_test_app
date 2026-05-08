@@ -593,14 +593,58 @@ window.toggleCustomTime = function(show) {
 
 const appContainer = document.getElementById('app-container');
 
+// SVG Icons
+const HOME_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+const BRAIN_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a7 7 0 00-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 002 2h4a2 2 0 002-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 00-7-7z" fill="currentColor"/><path d="M9 21h6M10 21v1a1 1 0 001 1h2a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>`;
+
+function goHome() {
+    if (state.mode === 'test' || state.mode === 'intro') {
+        if (!confirm('Are you sure? Your current progress will be lost.')) return;
+    }
+    clearInterval(state.timerInterval);
+    state.mode = 'home';
+    state.answerHistory = [];
+    state.currentTaskIndex = 0;
+    state.currentQuestionIndex = 0;
+    state.reasoningPhase = 'statement';
+    render();
+}
+window.goHome = goHome;
+
+function injectHomeButton() {
+    const btn = document.createElement('button');
+    btn.className = 'home-btn';
+    btn.setAttribute('title', 'Go Home');
+    btn.innerHTML = HOME_SVG;
+    btn.onclick = goHome;
+    appContainer.appendChild(btn);
+}
+
+function buildProgressDots() {
+    if (state.taskQueue.length <= 1) return '';
+    let dots = '<div class="progress-dots">';
+    for (let i = 0; i < state.taskQueue.length; i++) {
+        let cls = 'progress-dot';
+        if (i < state.currentTaskIndex) cls += ' done';
+        else if (i === state.currentTaskIndex) cls += ' active';
+        dots += `<div class="${cls}"></div>`;
+    }
+    dots += '</div>';
+    return dots;
+}
+
 function render() {
     appContainer.innerHTML = '';
 
+    // ═══════════ HOME SCREEN ═══════════
     if (state.mode === 'home') {
         appContainer.innerHTML = `
             <div class="center-content">
+                <div class="brand">
+                    <div class="brand-icon">${BRAIN_SVG}</div>
+                </div>
                 <h1>GIA Practice Assessment</h1>
-                <p>Configure your test session below.</p>
+                <p class="subtitle">Thomas International — General Intelligence Assessment</p>
                 
                 <div class="setup-form">
                     <div class="form-group">
@@ -620,19 +664,19 @@ function render() {
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="test-mode" value="practice" onchange="window.toggleCustomTime(false)" checked>
-                                Practice (Stopwatch only)
+                                Practice
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="test-mode" value="exam" onchange="window.toggleCustomTime(true)">
-                                Exam (Strict Timers)
+                                Exam
                             </label>
                         </div>
                     </div>
                     
-                    <div class="form-group" id="custom-time-group" style="display: none; margin-top: 10px;">
-                        <label>Time Limit per task (minutes)</label>
-                        <input type="number" id="custom-time-input" min="0" step="0.5" value="0" style="padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; font-size: 16px;">
-                        <small style="color: #666; margin-top: 5px;">Leave at 0 to use standard GIA times.</small>
+                    <div class="form-group" id="custom-time-group" style="display: none;">
+                        <label>Custom Time Limit (minutes)</label>
+                        <input type="number" id="custom-time-input" min="0" step="0.5" value="0">
+                        <small style="color: var(--text-muted); margin-top: 4px; font-size: 12px;">Leave at 0 for standard GIA times.</small>
                     </div>
                     
                     <button class="btn" onclick="startApp()">Start Session</button>
@@ -642,61 +686,68 @@ function render() {
         return;
     }
     
+    // ─── Home button on all non-home screens ───
+    injectHomeButton();
+    
     const task = state.taskQueue[state.currentTaskIndex];
 
-    // Header for active test screens
+    // ═══════════ HEADER (test screens only) ═══════════
     if (state.mode === 'test') {
         const header = document.createElement('div');
         header.className = 'header-info';
         
         let qInfo = `<span>${task.title}</span>`;
-        let pInfo = `<span>Question: ${state.currentQuestionIndex + 1}</span>`;
+        let pInfo = `<span>Q ${state.currentQuestionIndex + 1}</span>`;
         let tInfo = `<span id="timer-display" class="timer"></span>`;
         
         header.innerHTML = `${qInfo} ${pInfo} ${tInfo}`;
         appContainer.appendChild(header);
         
-        // Wait a tick to update the timer display immediately after DOM insert
         setTimeout(updateTimerDisplay, 0);
     }
 
     const screen = document.createElement('div');
     screen.className = 'screen active';
 
+    // ═══════════ INTRO SCREEN ═══════════
     if (state.mode === 'intro') {
         let timeText;
+        let badgeClass = state.testMode === 'exam' ? 'exam' : 'practice';
+        let badgeText = state.testMode === 'exam' ? 'Exam Mode' : 'Practice Mode';
+        
         if (state.testMode === 'exam') {
             let limit = state.customTimeLimit > 0 ? Math.floor(state.customTimeLimit * 60) : task.timeLimit;
-            timeText = `Strict time limit: <strong>${formatTime(limit)}</strong>.`;
+            timeText = `Time limit: <strong>${formatTime(limit)}</strong>`;
         } else {
-            timeText = `Practice mode: Untimed.`;
+            timeText = `No time limit — focus on accuracy.`;
         }
             
         screen.innerHTML = `
             <div class="center-content">
+                ${buildProgressDots()}
+                <span class="task-badge ${badgeClass}">${badgeText}</span>
                 <h1>${task.title}</h1>
-                <p>You are about to start a section with 100 available questions.</p>
-                <p>${timeText}</p>
-                <p>Remember, both speed and accuracy are equally important. Work as quickly and accurately as possible.</p>
-                <button class="btn" onclick="startTask()">Begin Task</button>
+                <p>100 questions available. ${timeText}</p>
+                <p>Both speed and accuracy matter. Work as quickly and accurately as possible.</p>
+                <button class="btn" onclick="startTask()">Begin Task →</button>
             </div>
         `;
+
+    // ═══════════ TEST SCREEN ═══════════
     } else if (state.mode === 'test') {
         const q = state.questions[state.currentQuestionIndex];
         const qArea = document.createElement('div');
         qArea.className = 'center-content';
         
-        // ─── TASK 1: REASONING (Two-phase: Statement → Click → Question) ───
+        // ─── TASK 1: REASONING ───
         if (q.type === 'reasoning') {
             if (state.reasoningPhase === 'statement') {
-                // Phase 1: Show ONLY the statement. User clicks when ready.
                 qArea.innerHTML = `
                     <div class="reasoning-statement">${q.statement}</div>
-                    <p style="color:#888; margin-top: 20px;">Study the statement above. Click when ready.</p>
-                    <button class="btn" onclick="reasoningReady()" style="margin-top: 20px;">Ready</button>
+                    <p style="color: var(--text-muted); margin-top: 16px;">Study the statement. Click when ready.</p>
+                    <button class="btn" onclick="reasoningReady()">Ready</button>
                 `;
             } else {
-                // Phase 2: Statement DISAPPEARS. Show question + two answer options.
                 qArea.innerHTML = `<div class="question-area">${q.question}</div>`;
                 const optionsArea = document.createElement('div');
                 optionsArea.className = 'options-area';
@@ -710,7 +761,7 @@ function render() {
                 qArea.appendChild(optionsArea);
             }
 
-        // ─── TASK 2: PERCEPTUAL SPEED (4 pairs, answer 0-4) ───
+        // ─── TASK 2: PERCEPTUAL SPEED ───
         } else if (q.type === 'perceptual') {
             let html = '<div class="question-area">How many pairs contain the same letter?</div><div class="perceptual-pairs">';
             q.pairs.forEach(p => {
@@ -729,7 +780,7 @@ function render() {
             });
             qArea.appendChild(optionsArea);
 
-        // ─── TASK 3: NUMBER SPEED & ACCURACY (3 clickable numbers) ───
+        // ─── TASK 3: NUMBER SPEED & ACCURACY ───
         } else if (q.type === 'numbers') {
             qArea.innerHTML = '';
             const optionsArea = document.createElement('div');
@@ -743,7 +794,7 @@ function render() {
             });
             qArea.appendChild(optionsArea);
 
-        // ─── TASK 4: WORD MEANING (3 clickable words — click the odd one) ───
+        // ─── TASK 4: WORD MEANING ───
         } else if (q.type === 'word') {
             qArea.innerHTML = '';
             const optionsArea = document.createElement('div');
@@ -757,7 +808,7 @@ function render() {
             });
             qArea.appendChild(optionsArea);
 
-        // ─── TASK 5: SPATIAL VISUALISATION (2 pairs, answer 0-2) ───
+        // ─── TASK 5: SPATIAL VISUALISATION ───
         } else if (q.type === 'spatial') {
             let html = '<div class="spatial-pairs">';
             q.pairs.forEach(p => {
@@ -782,10 +833,12 @@ function render() {
         
         screen.appendChild(qArea);
 
+    // ═══════════ RESULTS SCREEN ═══════════
     } else if (state.mode === 'final') {
         let correctCount = state.answerHistory.filter(a => a.isCorrect).length;
         let totalAns = state.answerHistory.length;
         let accuracy = totalAns > 0 ? Math.round((correctCount / totalAns) * 100) : 0;
+        let incorrectCount = totalAns - correctCount;
         
         let tableRows = state.answerHistory.map((ans, idx) => `
             <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
@@ -794,7 +847,7 @@ function render() {
                 <td>${ans.selected}</td>
                 <td>${ans.correct}</td>
                 <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
-                    ${ans.isCorrect ? '✔ Correct' : '✘ Incorrect'}
+                    ${ans.isCorrect ? '✔' : '✘'}
                 </td>
             </tr>
         `).join('');
@@ -803,25 +856,42 @@ function render() {
             <div class="results-container">
                 <div class="results-summary">
                     <h2>Session Complete</h2>
-                    <p>Total Attempted: <strong>${totalAns}</strong> | Correct: <strong>${correctCount}</strong> | Accuracy: <strong>${accuracy}%</strong></p>
+                    <div class="stat-row">
+                        <div class="stat-card">
+                            <div class="stat-value">${totalAns}</div>
+                            <div class="stat-label">Attempted</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--success)">${correctCount}</div>
+                            <div class="stat-label">Correct</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--danger)">${incorrectCount}</div>
+                            <div class="stat-label">Wrong</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--warning)">${accuracy}%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="results-table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Question Summary</th>
-                                <th>Your Answer</th>
-                                <th>Correct Answer</th>
-                                <th>Status</th>
+                                <th>Question</th>
+                                <th>Yours</th>
+                                <th>Correct</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align:center;">No questions answered.</td></tr>'}
+                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
                         </tbody>
                     </table>
                 </div>
-                <button class="btn" style="margin-top: 0;" onclick="location.reload()">Return to Home</button>
+                <button class="btn" style="margin-top: 0;" onclick="goHome()">Back to Home</button>
             </div>
         `;
     }
@@ -831,3 +901,4 @@ function render() {
 
 // Initial render
 render();
+
