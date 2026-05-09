@@ -545,7 +545,8 @@ function handleAnswer(selected, correct) {
         summary: q.summary,
         selected: selected,
         correct: correct,
-        isCorrect: selected === correct
+        isCorrect: selected === correct,
+        questionData: JSON.parse(JSON.stringify(q)) // store full question for review modal
     });
     
     state.currentQuestionIndex++;
@@ -558,6 +559,103 @@ function handleAnswer(selected, correct) {
     }
 }
 window.handleAnswer = handleAnswer;
+
+// --- QUESTION REVIEW MODAL ---
+
+function showQuestionModal(idx) {
+    const ans = state.answerHistory[idx];
+    const q = ans.questionData;
+    if (!q) return;
+
+    // Remove existing modal if any
+    closeModal();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'question-modal';
+    overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+
+    let questionContent = '';
+
+    if (q.type === 'reasoning') {
+        questionContent = `
+            <div class="modal-q-label">Statement</div>
+            <div class="modal-q-statement">${q.statement}</div>
+            <div class="modal-q-label" style="margin-top:16px;">Question</div>
+            <div class="modal-q-text">${q.question}</div>
+        `;
+    } else if (q.type === 'perceptual') {
+        let pairsHtml = '<div class="modal-pairs">';
+        q.pairs.forEach(p => {
+            let isMatch = p[0].toLowerCase() === p[1].toLowerCase();
+            pairsHtml += `<div class="modal-pair ${isMatch ? 'match' : ''}">${p[0]}<br>${p[1]}</div>`;
+        });
+        pairsHtml += '</div>';
+        questionContent = `
+            <div class="modal-q-label">How many pairs contain the same letter?</div>
+            ${pairsHtml}
+        `;
+    } else if (q.type === 'numbers') {
+        questionContent = `
+            <div class="modal-q-label">Which number is furthest from the middle?</div>
+            <div class="modal-numbers">${q.numbers.map(n => `<span>${n}</span>`).join('')}</div>
+        `;
+    } else if (q.type === 'word') {
+        questionContent = `
+            <div class="modal-q-label">Which word is the odd one out?</div>
+            <div class="modal-words">${q.options.map(w => `<span class="${w === ans.correct ? 'odd-word' : ''}">${w}</span>`).join('')}</div>
+        `;
+    } else if (q.type === 'spatial') {
+        let spHtml = '<div class="modal-spatial">';
+        q.pairs.forEach(p => {
+            let isRotationOnly = !p.mirror;
+            spHtml += `<div class="modal-sp-pair ${isRotationOnly ? 'match' : ''}">
+                <div style="transform: rotate(${p.rot1}deg); font-size: 36px; font-weight: bold;">${p.symbol}</div>
+                <div style="transform: rotate(${p.rot2}deg) ${p.mirror ? 'scaleX(-1)' : ''}; font-size: 36px; font-weight: bold;">${p.symbol}</div>
+            </div>`;
+        });
+        spHtml += '</div>';
+        questionContent = `
+            <div class="modal-q-label">How many pairs match (rotation only)?</div>
+            ${spHtml}
+        `;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-card';
+    modal.innerHTML = `
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-header">Question ${idx + 1}</div>
+        <div class="modal-body">
+            ${questionContent}
+            <div class="modal-answers">
+                <div class="modal-ans-item ${ans.isCorrect ? 'correct' : 'wrong'}">
+                    <span class="modal-ans-label">Your answer</span>
+                    <span class="modal-ans-value">${ans.selected}</span>
+                </div>
+                <div class="modal-ans-item correct">
+                    <span class="modal-ans-label">Correct answer</span>
+                    <span class="modal-ans-value">${ans.correct}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+}
+window.showQuestionModal = showQuestionModal;
+
+function closeModal() {
+    const existing = document.getElementById('question-modal');
+    if (existing) {
+        existing.classList.remove('visible');
+        setTimeout(() => existing.remove(), 200);
+    }
+}
+window.closeModal = closeModal;
 
 // Task 1 Reasoning: transition from statement phase to question phase
 function reasoningReady() {
@@ -849,6 +947,7 @@ function render() {
                 <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
                     ${ans.isCorrect ? '✔' : '✘'}
                 </td>
+                <td><button class="view-q-btn" onclick="showQuestionModal(${idx})">View</button></td>
             </tr>
         `).join('');
 
@@ -884,10 +983,11 @@ function render() {
                                 <th>Yours</th>
                                 <th>Correct</th>
                                 <th></th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="5" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
+                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
                         </tbody>
                     </table>
                 </div>

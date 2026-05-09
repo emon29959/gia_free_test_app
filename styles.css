@@ -376,16 +376,20 @@ p {
     overflow: hidden;
 }
 
-.option-box:hover {
-    border-color: var(--primary);
-    background: rgba(37,99,235,0.1);
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+/* Hover effects only for pointer devices (fixes touch ghost-press bug) */
+@media (hover: hover) and (pointer: fine) {
+    .option-box:hover {
+        border-color: var(--primary);
+        background: rgba(37,99,235,0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+    }
 }
 
 .option-box:active {
     transform: translateY(0) scale(0.97);
     background: rgba(37,99,235,0.2);
+    transition: all 0.05s;
 }
 
 /* ─── TASK-SPECIFIC STYLES ─── */
@@ -577,6 +581,223 @@ tr:hover {
 .status-icon.correct { color: var(--success); }
 .status-icon.incorrect { color: var(--danger); }
 
+/* ─── VIEW QUESTION BUTTON ─── */
+.view-q-btn {
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    background: var(--glass);
+    color: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.view-q-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* ─── QUESTION REVIEW MODAL ─── */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    padding: 20px;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+
+.modal-overlay.visible .modal-card {
+    transform: scale(1) translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: var(--glass);
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.modal-close:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.modal-header {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-q-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.modal-q-statement {
+    font-size: 16px;
+    font-style: italic;
+    padding: 12px 16px;
+    background: var(--bg-card-alt);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    color: var(--text);
+}
+
+.modal-q-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.modal-pairs, .modal-spatial {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 8px 0;
+}
+
+.modal-pair, .modal-sp-pair {
+    border: 2px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.4;
+    color: var(--text);
+}
+
+.modal-pair.match, .modal-sp-pair.match {
+    border-color: var(--success);
+    background: rgba(16,185,129,0.08);
+}
+
+.modal-sp-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.modal-numbers, .modal-words {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
+.modal-numbers span, .modal-words span {
+    padding: 10px 18px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.modal-words .odd-word {
+    border-color: var(--warning);
+    background: rgba(245,158,11,0.08);
+}
+
+.modal-answers {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.modal-ans-item {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.modal-ans-item.correct {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+}
+
+.modal-ans-item.wrong {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+}
+
+.modal-ans-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.modal-ans-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
 /* ─── INTRO SCREEN TASK BADGE ─── */
 .task-badge {
     display: inline-block;
@@ -699,6 +920,12 @@ tr:hover {
     th, td { padding: 8px 10px; font-size: 11px; }
     table { min-width: 400px; }
     .home-btn { top: 10px; left: 10px; width: 34px; height: 34px; }
+    .modal-overlay { padding: 10px; }
+    .modal-card { padding: 20px 16px; border-radius: 12px; max-height: 85vh; }
+    .modal-header { font-size: 16px; }
+    .modal-pair, .modal-sp-pair { font-size: 18px; padding: 8px 12px; }
+    .modal-numbers span, .modal-words span { font-size: 15px; padding: 8px 14px; }
+    .modal-answers { flex-direction: column; gap: 8px; }
 }
 
 @media (max-width: 360px) {
