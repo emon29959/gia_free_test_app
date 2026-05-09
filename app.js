@@ -731,18 +731,119 @@ function buildProgressDots() {
     return dots;
 }
 
+
+// --- TIPS & SPATIAL TOOL ---
+
+let selectedChar = 'R';
+
+function toggleTips() {
+    const panels = document.getElementById('tips-panels');
+    const arrow = document.getElementById('tips-arrow');
+    if (!panels) return;
+    if (panels.style.display === 'none') {
+        panels.style.display = 'flex';
+        if (arrow) arrow.textContent = '▲';
+    } else {
+        panels.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    }
+}
+window.toggleTips = toggleTips;
+
+function toggleTipPanel(headerBtn) {
+    const body = headerBtn.nextElementSibling;
+    const chevron = headerBtn.querySelector('.tip-chevron');
+    if (!body) return;
+    const isOpen = body.classList.contains('open');
+    // Close all others
+    document.querySelectorAll('.tip-panel-body').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.tip-chevron').forEach(c => c.classList.remove('open'));
+    if (!isOpen) {
+        body.classList.add('open');
+        if (chevron) chevron.classList.add('open');
+    }
+}
+window.toggleTipPanel = toggleTipPanel;
+
+function buildCharGrid() {
+    const grid = document.getElementById('char-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowers = 'abcdefghijklmnopqrstuvwxyz';
+    const nums = '123456789';
+    const all = uppers + lowers + nums;
+    for (let ch of all) {
+        const cell = document.createElement('span');
+        cell.className = 'char-cell' + (ch === selectedChar ? ' active' : '');
+        cell.textContent = ch;
+        cell.onclick = () => selectChar(ch);
+        grid.appendChild(cell);
+    }
+}
+
+function selectChar(ch) {
+    selectedChar = ch;
+    // Update grid highlights
+    document.querySelectorAll('.char-cell').forEach(c => {
+        c.classList.toggle('active', c.textContent === ch);
+    });
+    // Reset rotation and mirror
+    const slider = document.getElementById('rot-slider');
+    const mirrorCb = document.getElementById('mirror-check');
+    if (slider) slider.value = 0;
+    if (mirrorCb) mirrorCb.checked = false;
+    updateSpatialPreview();
+}
+window.selectChar = selectChar;
+
+function updateSpatialPreview() {
+    const slider = document.getElementById('rot-slider');
+    const mirrorCb = document.getElementById('mirror-check');
+    const rotLabel = document.getElementById('rot-value');
+    const origEl = document.getElementById('sp-original');
+    const transEl = document.getElementById('sp-transformed');
+    const verdict = document.getElementById('sp-verdict');
+    if (!slider || !origEl || !transEl) return;
+
+    const deg = parseInt(slider.value);
+    const mirrored = mirrorCb ? mirrorCb.checked : false;
+    if (rotLabel) rotLabel.textContent = deg;
+
+    origEl.textContent = selectedChar;
+    origEl.style.transform = '';
+    transEl.textContent = selectedChar;
+
+    let transform = `rotate(${deg}deg)`;
+    if (mirrored) transform += ' scaleX(-1)';
+    transEl.style.transform = transform;
+
+    if (verdict) {
+        if (mirrored) {
+            verdict.textContent = 'Mirror image — DIFFERENT shape';
+            verdict.className = 'spatial-verdict mirror';
+        } else {
+            verdict.textContent = 'Same shape — just rotated';
+            verdict.className = 'spatial-verdict match';
+        }
+    }
+}
+window.updateSpatialPreview = updateSpatialPreview;
+
 function render() {
     appContainer.innerHTML = '';
 
     // ═══════════ HOME SCREEN ═══════════
     if (state.mode === 'home') {
         appContainer.innerHTML = `
-            <div class="center-content">
+            <div class="home-scroll">
+                <div class="center-content" style="flex-grow:0;">
                 <div class="brand">
                     <div class="brand-icon">${BRAIN_SVG}</div>
                 </div>
                 <h1>GIA Practice Assessment</h1>
                 <p class="subtitle">Thomas International — General Intelligence Assessment</p>
+                </div>
                 
                 <div class="setup-form">
                     <div class="form-group">
@@ -779,8 +880,67 @@ function render() {
                     
                     <button class="btn" onclick="startApp()">Start Session</button>
                 </div>
+
+                <div class="tips-section">
+                    <button class="tips-toggle-btn" onclick="toggleTips()"><span>💡 Tips & Tricks</span><span id="tips-arrow" class="tips-arrow">▼</span></button>
+                    <div id="tips-panels" class="tips-panels" style="display:none;">
+                        <div class="tip-panel"><button class="tip-panel-header" onclick="toggleTipPanel(this)"><span>Task 1: Reasoning</span><span class="tip-chevron">›</span></button><div class="tip-panel-body"><ul>
+                            <li><strong>Memorise the relationship</strong> — "A is taller than B" means B is shorter.</li>
+                            <li><strong>One read only</strong> — The statement disappears. Think "A &gt; B" instantly.</li>
+                            <li><strong>Watch for negatives</strong> — "Who is NOT heavier?" flips the answer.</li>
+                            <li><strong>Label mentally</strong> — Subject1=MORE, Subject2=LESS.</li>
+                            <li><strong>Target</strong> — Under 3 seconds per question.</li>
+                        </ul></div></div>
+                        <div class="tip-panel"><button class="tip-panel-header" onclick="toggleTipPanel(this)"><span>Task 2: Perceptual Speed</span><span class="tip-chevron">›</span></button><div class="tip-panel-body"><ul>
+                            <li><strong>Scan, don't read</strong> — Glance at each pair as a shape.</li>
+                            <li><strong>Confusable letters</strong> — b/d, p/q, m/n, u/v look similar.</li>
+                            <li><strong>Case doesn't matter</strong> — 'A' and 'a' are the same letter.</li>
+                            <li><strong>Count mismatches</strong> — Count non-matches, subtract from 4.</li>
+                            <li><strong>Target</strong> — Under 4 seconds per question.</li>
+                        </ul></div></div>
+                        <div class="tip-panel"><button class="tip-panel-header" onclick="toggleTipPanel(this)"><span>Task 3: Number Speed</span><span class="tip-chevron">›</span></button><div class="tip-panel-body"><ul>
+                            <li><strong>Find the middle number</strong> — Neither highest nor lowest.</li>
+                            <li><strong>Compare distances</strong> — Which extreme is further from the middle?</li>
+                            <li><strong>Estimate</strong> — Round mentally. 47 vs 52 vs 89 → 89 is further.</li>
+                            <li><strong>Close margins</strong> — Two close numbers (34, 36, 71) → 71 is obvious.</li>
+                            <li><strong>Target</strong> — Under 3 seconds per question.</li>
+                        </ul></div></div>
+                        <div class="tip-panel"><button class="tip-panel-header" onclick="toggleTipPanel(this)"><span>Task 4: Word Meaning</span><span class="tip-chevron">›</span></button><div class="tip-panel-body"><ul>
+                            <li><strong>Find the connection</strong> — Two words are synonyms or antonyms.</li>
+                            <li><strong>Synonyms are common</strong> — Two synonyms + one unrelated word.</li>
+                            <li><strong>Antonyms appear too</strong> — Happy, Sad, Bicycle → Bicycle is odd.</li>
+                            <li><strong>Read all three</strong> — Don't jump at the first odd word.</li>
+                            <li><strong>Build vocabulary</strong> — More words = faster recognition.</li>
+                        </ul></div></div>
+                        <div class="tip-panel"><button class="tip-panel-header" onclick="toggleTipPanel(this)"><span>Task 5: Spatial Visualisation</span><span class="tip-chevron">›</span></button><div class="tip-panel-body"><ul>
+                            <li><strong>Rotation ≠ Mirror</strong> — Rotated "R" = same. Mirrored "R" = different.</li>
+                            <li><strong>Track one feature</strong> — If an arm flips side, it's a mirror.</li>
+                            <li><strong>Asymmetric letters</strong> — R, F, P, J are asymmetric. O, X always match.</li>
+                            <li><strong>Mental rotation</strong> — Spin on card = same. Must flip card = mirror.</li>
+                            <li><strong>Target</strong> — Under 4 seconds per question.</li>
+                        </ul>
+                        <div class="spatial-tool">
+                            <div class="spatial-tool-header">🔄 Interactive Rotation Practice</div>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Choose a character, rotate and mirror it to see how it transforms.</p>
+                            <div class="spatial-tool-controls">
+                                <div class="char-grid-label">Pick a character:</div>
+                                <div class="char-grid" id="char-grid"></div>
+                                <div class="spatial-tool-row"><label class="spatial-tool-label">Rotation: <span id="rot-value">0</span>°</label><input type="range" id="rot-slider" min="0" max="360" value="0" step="15" class="rot-slider" oninput="updateSpatialPreview()"></div>
+                                <div class="spatial-tool-row"><label class="mirror-toggle-label"><input type="checkbox" id="mirror-check" onchange="updateSpatialPreview()"> Mirror (flip horizontally)</label></div>
+                            </div>
+                            <div class="spatial-preview-area">
+                                <div class="spatial-preview-box"><div class="spatial-preview-label">Original</div><div class="spatial-preview-char" id="sp-original">R</div></div>
+                                <div class="spatial-preview-arrow">→</div>
+                                <div class="spatial-preview-box"><div class="spatial-preview-label">Transformed</div><div class="spatial-preview-char" id="sp-transformed">R</div></div>
+                            </div>
+                            <div id="sp-verdict" class="spatial-verdict match">Same shape — just rotated</div>
+                        </div>
+                        </div></div>
+                    </div>
+                </div>
             </div>
         `;
+        buildCharGrid();
         return;
     }
     
