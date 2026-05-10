@@ -784,51 +784,41 @@ function buildCharGrid() {
 
 function selectChar(ch) {
     selectedChar = ch;
-    // Update grid highlights
     document.querySelectorAll('.char-cell').forEach(c => {
         c.classList.toggle('active', c.textContent === ch);
     });
-    // Reset rotation and mirror
-    const slider = document.getElementById('rot-slider');
-    const mirrorCb = document.getElementById('mirror-check');
-    if (slider) slider.value = 0;
-    if (mirrorCb) mirrorCb.checked = false;
-    updateSpatialPreview();
+    // Reset both sliders
+    const ns = document.getElementById('sp-normal-slider');
+    const ms = document.getElementById('sp-mirror-slider');
+    if (ns) ns.value = 0;
+    if (ms) ms.value = 0;
+    updateDualPreview();
 }
 window.selectChar = selectChar;
 
-function updateSpatialPreview() {
-    const slider = document.getElementById('rot-slider');
-    const mirrorCb = document.getElementById('mirror-check');
-    const rotLabel = document.getElementById('rot-value');
-    const origEl = document.getElementById('sp-original');
-    const transEl = document.getElementById('sp-transformed');
-    const verdict = document.getElementById('sp-verdict');
-    if (!slider || !origEl || !transEl) return;
+function updateDualPreview() {
+    const normalSlider = document.getElementById('sp-normal-slider');
+    const mirrorSlider = document.getElementById('sp-mirror-slider');
+    const normalDeg = document.getElementById('sp-normal-deg');
+    const mirrorDeg = document.getElementById('sp-mirror-deg');
+    const normalChar = document.getElementById('sp-normal-char');
+    const mirrorChar = document.getElementById('sp-mirror-char');
 
-    const deg = parseInt(slider.value);
-    const mirrored = mirrorCb ? mirrorCb.checked : false;
-    if (rotLabel) rotLabel.textContent = deg;
+    if (!normalSlider || !mirrorSlider || !normalChar || !mirrorChar) return;
 
-    origEl.textContent = selectedChar;
-    origEl.style.transform = '';
-    transEl.textContent = selectedChar;
+    const nDeg = parseInt(normalSlider.value);
+    const mDeg = parseInt(mirrorSlider.value);
 
-    let transform = `rotate(${deg}deg)`;
-    if (mirrored) transform += ' scaleX(-1)';
-    transEl.style.transform = transform;
+    if (normalDeg) normalDeg.textContent = nDeg;
+    if (mirrorDeg) mirrorDeg.textContent = mDeg;
 
-    if (verdict) {
-        if (mirrored) {
-            verdict.textContent = 'Mirror image — DIFFERENT shape';
-            verdict.className = 'spatial-verdict mirror';
-        } else {
-            verdict.textContent = 'Same shape — just rotated';
-            verdict.className = 'spatial-verdict match';
-        }
-    }
+    normalChar.textContent = selectedChar;
+    normalChar.style.transform = `rotate(${nDeg}deg)`;
+
+    mirrorChar.textContent = selectedChar;
+    mirrorChar.style.transform = `rotate(${mDeg}deg) scaleX(-1)`;
 }
-window.updateSpatialPreview = updateSpatialPreview;
+window.updateDualPreview = updateDualPreview;
 
 function render() {
     appContainer.innerHTML = '';
@@ -921,19 +911,25 @@ function render() {
                         </ul>
                         <div class="spatial-tool">
                             <div class="spatial-tool-header">🔄 Interactive Rotation Practice</div>
-                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Choose a character, rotate and mirror it to see how it transforms.</p>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">See how Normal vs Mirrored characters look at any rotation. Drag each slider independently.</p>
                             <div class="spatial-tool-controls">
                                 <div class="char-grid-label">Pick a character:</div>
                                 <div class="char-grid" id="char-grid"></div>
-                                <div class="spatial-tool-row"><label class="spatial-tool-label">Rotation: <span id="rot-value">0</span>°</label><input type="range" id="rot-slider" min="0" max="360" value="0" step="15" class="rot-slider" oninput="updateSpatialPreview()"></div>
-                                <div class="spatial-tool-row"><label class="mirror-toggle-label"><input type="checkbox" id="mirror-check" onchange="updateSpatialPreview()"> Mirror (flip horizontally)</label></div>
                             </div>
-                            <div class="spatial-preview-area">
-                                <div class="spatial-preview-box"><div class="spatial-preview-label">Original</div><div class="spatial-preview-char" id="sp-original">R</div></div>
-                                <div class="spatial-preview-arrow">→</div>
-                                <div class="spatial-preview-box"><div class="spatial-preview-label">Transformed</div><div class="spatial-preview-char" id="sp-transformed">R</div></div>
+                            <div class="sp-dual-area">
+                                <div class="sp-dual-panel sp-normal">
+                                    <div class="sp-panel-badge normal">Normal</div>
+                                    <div class="spatial-preview-char sp-char" id="sp-normal-char">R</div>
+                                    <div class="sp-rot-control"><label>Rotate: <span id="sp-normal-deg">0</span>°</label><input type="range" id="sp-normal-slider" min="0" max="360" value="0" step="15" class="rot-slider" oninput="updateDualPreview()"></div>
+                                </div>
+                                <div class="sp-dual-vs">vs</div>
+                                <div class="sp-dual-panel sp-mirror">
+                                    <div class="sp-panel-badge mirror">Mirrored</div>
+                                    <div class="spatial-preview-char sp-char" id="sp-mirror-char">R</div>
+                                    <div class="sp-rot-control"><label>Rotate: <span id="sp-mirror-deg">0</span>°</label><input type="range" id="sp-mirror-slider" min="0" max="360" value="0" step="15" class="rot-slider" oninput="updateDualPreview()"></div>
+                                </div>
                             </div>
-                            <div id="sp-verdict" class="spatial-verdict match">Same shape — just rotated</div>
+                            <div class="sp-hint">💡 The <strong>normal</strong> version can match any rotation of itself. The <strong>mirrored</strong> version can NEVER match the normal — no matter how you rotate it.</div>
                         </div>
                         </div></div>
                     </div>
