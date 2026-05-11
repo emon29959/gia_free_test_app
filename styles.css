@@ -962,12 +962,24 @@ tr:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    max-height: 140px;
+    max-height: 200px;
     overflow-y: auto;
     padding: 4px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--bg-card-alt);
+}
+
+.char-grid-divider {
+    width: 100%;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    padding: 4px 2px 2px 2px;
+    border-bottom: 1px solid rgba(37,99,235,0.2);
+    margin-top: 2px;
 }
 
 .char-cell {

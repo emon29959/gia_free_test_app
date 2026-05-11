@@ -359,10 +359,23 @@ function generateWordMeaningQuestions(count) {
 }
 
 function generateSpatialQuestions(count) {
-    // Expanded pool of asymmetric characters that look distinct when mirrored
+    // Comprehensive pool: asymmetric letters, digits, symbols, and geometric shapes
     const symbolPool = [
-        'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K', 'N', 'S',
-        'b', 'd', 'h', 'k', 'q', 'r', 'y', 'f'
+        // Uppercase asymmetric letters
+        'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K', 'N', 'S', 'Z', 'E', 'B', 'C', 'D',
+        // Lowercase asymmetric letters
+        'b', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'n', 'p', 'q', 'r', 's', 'y', 'z', 'a',
+        // Asymmetric digits
+        '2', '3', '4', '5', '6', '7', '9',
+        // Common symbols
+        '?', '&', '#', '%', '@', '\u00A3', '\u00A7', '\u00B6',
+        // Geometric / Unicode shapes (all asymmetric)
+        '\u2190', '\u2191', '\u2196', '\u2197',         // ← ↑ ↖ ↗
+        '\u25B7', '\u25C1', '\u25B3', '\u25BD',         // ▷ ◁ △ ▽
+        '\u2702', '\u2709', '\u260E', '\u2615',         // ✂ ✉ ☎ ☕
+        '\u269A', '\u2692', '\u2694', '\u26A1',         // ⚚ ⚒ ⚔ ⚡
+        '\u2764', '\u266A', '\u266B', '\u2605',         // ❤ ♪ ♫ ★
+        '\u2708', '\u2602', '\u2690', '\u2691'          // ✈ ☂ ⚐ ⚑
     ];
     // Finer rotation angles for more visual challenge
     const rotationAngles = [0, 45, 90, 135, 180, 225, 270, 315];
@@ -769,17 +782,28 @@ function buildCharGrid() {
     const grid = document.getElementById('char-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowers = 'abcdefghijklmnopqrstuvwxyz';
-    const nums = '123456789';
-    const all = uppers + lowers + nums;
-    for (let ch of all) {
-        const cell = document.createElement('span');
-        cell.className = 'char-cell' + (ch === selectedChar ? ' active' : '');
-        cell.textContent = ch;
-        cell.onclick = () => selectChar(ch);
-        grid.appendChild(cell);
-    }
+
+    const sections = [
+        { label: 'A–Z', chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' },
+        { label: 'a–z', chars: 'abcdefghijklmnopqrstuvwxyz' },
+        { label: '0–9', chars: '123456789' },
+        { label: 'Symbols', chars: '?&#%@\u00A3\u00A7\u00B6' },
+        { label: 'Shapes', chars: '\u2190\u2191\u2196\u2197\u25B7\u25C1\u25B3\u25BD\u2702\u2709\u260E\u2615\u269A\u2692\u2694\u26A1\u2764\u266A\u266B\u2605\u2708\u2602\u2690\u2691' }
+    ];
+
+    sections.forEach(sec => {
+        const divider = document.createElement('div');
+        divider.className = 'char-grid-divider';
+        divider.textContent = sec.label;
+        grid.appendChild(divider);
+        for (let ch of sec.chars) {
+            const cell = document.createElement('span');
+            cell.className = 'char-cell' + (ch === selectedChar ? ' active' : '');
+            cell.textContent = ch;
+            cell.onclick = () => selectChar(ch);
+            grid.appendChild(cell);
+        }
+    });
 }
 
 function selectChar(ch) {
