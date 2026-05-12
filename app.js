@@ -359,19 +359,22 @@ function generateWordMeaningQuestions(count) {
 }
 
 function generateSpatialQuestions(count, includeExtras) {
-    // Base pool: asymmetric letters and digits
+    // Base pool: ONLY truly asymmetric characters
+    // Removed: B,C,D,E (horizontal axis symmetry — mirror+180° = original)
+    // Removed: N,S,Z (180° rotational symmetry — mirror looks like rotation)
+    // Removed: a,e,n,s,z (same issues in lowercase)
     const basePool = [
-        'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K', 'N', 'S', 'Z', 'E', 'B', 'C', 'D',
-        'b', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'n', 'p', 'q', 'r', 's', 'y', 'z', 'a',
+        'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K',
+        'b', 'd', 'f', 'g', 'h', 'j', 'k', 'p', 'q', 'r', 'y',
         '2', '3', '4', '5', '6', '7', '9'
     ];
-    // Extra pool: symbols and geometric shapes
+    // Extra pool: symbols and geometric shapes (all asymmetric)
     const extraPool = [
         '?', '&', '#', '%', '@', '\u00A3', '\u00A7', '\u00B6',
         '\u2190', '\u2191', '\u2196', '\u2197',
-        '\u25B7', '\u25C1', '\u25B3', '\u25BD',
+        '\u25B7', '\u25C1',
         '\u2702', '\u2709', '\u260E', '\u2615',
-        '\u269A', '\u2692', '\u2694', '\u26A1',
+        '\u2692', '\u2694', '\u26A1',
         '\u2764', '\u266A', '\u266B', '\u2605',
         '\u2708', '\u2602', '\u2690', '\u2691'
     ];
