@@ -363,10 +363,11 @@ function generateSpatialQuestions(count, includeExtras) {
     // Removed: B,C,D,E,K (horizontal axis symmetry — mirror+180° = original)
     // Removed: N,S,Z (180° rotational symmetry — mirror looks like rotation)
     // Removed: a,e,n,s,z (same issues in lowercase)
+    // Removed: 3 (horizontally symmetric — top/bottom bumps are mirror images)
     const basePool = [
         'R', 'P', 'F', 'L', 'J', 'Q', 'G',
         'b', 'd', 'f', 'g', 'h', 'j', 'k', 'p', 'q', 'r', 'y',
-        '2', '3', '4', '5', '6', '7', '9'
+        '2', '4', '5', '6', '7', '9'
     ];
     // Extra pool: symbols and geometric shapes (all asymmetric)
     const extraPool = [
