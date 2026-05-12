@@ -360,11 +360,11 @@ function generateWordMeaningQuestions(count) {
 
 function generateSpatialQuestions(count, includeExtras) {
     // Base pool: ONLY truly asymmetric characters
-    // Removed: B,C,D,E (horizontal axis symmetry — mirror+180° = original)
+    // Removed: B,C,D,E,K (horizontal axis symmetry — mirror+180° = original)
     // Removed: N,S,Z (180° rotational symmetry — mirror looks like rotation)
     // Removed: a,e,n,s,z (same issues in lowercase)
     const basePool = [
-        'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K',
+        'R', 'P', 'F', 'L', 'J', 'Q', 'G',
         'b', 'd', 'f', 'g', 'h', 'j', 'k', 'p', 'q', 'r', 'y',
         '2', '3', '4', '5', '6', '7', '9'
     ];
