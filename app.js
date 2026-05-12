@@ -358,25 +358,24 @@ function generateWordMeaningQuestions(count) {
     return questions;
 }
 
-function generateSpatialQuestions(count) {
-    // Comprehensive pool: asymmetric letters, digits, symbols, and geometric shapes
-    const symbolPool = [
-        // Uppercase asymmetric letters
+function generateSpatialQuestions(count, includeExtras) {
+    // Base pool: asymmetric letters and digits
+    const basePool = [
         'R', 'P', 'F', 'L', 'J', 'Q', 'G', 'K', 'N', 'S', 'Z', 'E', 'B', 'C', 'D',
-        // Lowercase asymmetric letters
         'b', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'n', 'p', 'q', 'r', 's', 'y', 'z', 'a',
-        // Asymmetric digits
-        '2', '3', '4', '5', '6', '7', '9',
-        // Common symbols
-        '?', '&', '#', '%', '@', '\u00A3', '\u00A7', '\u00B6',
-        // Geometric / Unicode shapes (all asymmetric)
-        '\u2190', '\u2191', '\u2196', '\u2197',         // ← ↑ ↖ ↗
-        '\u25B7', '\u25C1', '\u25B3', '\u25BD',         // ▷ ◁ △ ▽
-        '\u2702', '\u2709', '\u260E', '\u2615',         // ✂ ✉ ☎ ☕
-        '\u269A', '\u2692', '\u2694', '\u26A1',         // ⚚ ⚒ ⚔ ⚡
-        '\u2764', '\u266A', '\u266B', '\u2605',         // ❤ ♪ ♫ ★
-        '\u2708', '\u2602', '\u2690', '\u2691'          // ✈ ☂ ⚐ ⚑
+        '2', '3', '4', '5', '6', '7', '9'
     ];
+    // Extra pool: symbols and geometric shapes
+    const extraPool = [
+        '?', '&', '#', '%', '@', '\u00A3', '\u00A7', '\u00B6',
+        '\u2190', '\u2191', '\u2196', '\u2197',
+        '\u25B7', '\u25C1', '\u25B3', '\u25BD',
+        '\u2702', '\u2709', '\u260E', '\u2615',
+        '\u269A', '\u2692', '\u2694', '\u26A1',
+        '\u2764', '\u266A', '\u266B', '\u2605',
+        '\u2708', '\u2602', '\u2690', '\u2691'
+    ];
+    const symbolPool = includeExtras ? [...basePool, ...extraPool] : basePool;
     // Finer rotation angles for more visual challenge
     const rotationAngles = [0, 45, 90, 135, 180, 225, 270, 315];
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -425,7 +424,7 @@ const questionGenerators = {
     perceptual: () => generatePerceptualSpeedQuestions(100),
     numbers: () => generateNumberSpeedQuestions(100),
     word: () => generateWordMeaningQuestions(100),
-    spatial: () => generateSpatialQuestions(100)
+    spatial: () => generateSpatialQuestions(100, state.includeExtraSymbols)
 };
 
 // Fisher-Yates shuffle for true randomization
@@ -463,7 +462,8 @@ let state = {
     timeValue: 0, // seconds elapsed or remaining
     timerInterval: null,
     customTimeLimit: 0, // custom minutes set by user
-    reasoningPhase: 'statement' // 'statement' or 'question' (Task 1 only)
+    reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
+    includeExtraSymbols: true // include symbols & shapes in spatial questions
 };
 
 // --- LOGIC ---
@@ -477,9 +477,11 @@ function startApp() {
         customTime = parseFloat(document.getElementById('custom-time-input').value) || 0;
     }
     
+    const extraSymCb = document.getElementById('extra-symbols-check');
     state.selectedCategory = categorySelect;
     state.testMode = modeSelect;
     state.customTimeLimit = customTime;
+    state.includeExtraSymbols = extraSymCb ? extraSymCb.checked : true;
     
     if (categorySelect === 'all') {
         state.taskQueue = [...TASKS];
@@ -890,6 +892,11 @@ function render() {
                         <label>Custom Time Limit (minutes)</label>
                         <input type="number" id="custom-time-input" min="0" step="0.5" value="0">
                         <small style="color: var(--text-muted); margin-top: 4px; font-size: 12px;">Leave at 0 for standard GIA times.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="extra-sym-label"><input type="checkbox" id="extra-symbols-check" checked> Include symbols & shapes in Spatial questions</label>
+                        <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Uncheck for letters & numbers only (standard GIA).</small>
                     </div>
                     
                     <button class="btn" onclick="startApp()">Start Session</button>

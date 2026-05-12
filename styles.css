@@ -806,6 +806,24 @@ tr:hover {
     width: 100%;
 }
 
+
+.extra-sym-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.extra-sym-label input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
 /* ─── TIPS & TRICKS SECTION ─── */
 .tips-section {
     width: 100%;
