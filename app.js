@@ -394,16 +394,31 @@ function generateSpatialQuestions(count, includeExtras) {
         for (let j = 0; j < numPairs; j++) {
             // Each pair can use a different symbol for variety
             let baseSymbol = pick(symbolPool);
-            let isMatch = Math.random() > 0.5;
             let rot1 = pick(rotationAngles);
             let rot2 = pick(rotationAngles);
-            let isMirror = !isMatch;
+
+            // Independent mirror state for each symbol
+            // Match = both same state (normal-normal OR mirrored-mirrored)
+            // No match = different states (normal-mirrored OR mirrored-normal)
+            let isMatch = Math.random() > 0.5;
+            let mirror1, mirror2;
+            if (isMatch) {
+                // Both same: either both normal or both mirrored
+                let bothMirrored = Math.random() > 0.5;
+                mirror1 = bothMirrored;
+                mirror2 = bothMirrored;
+            } else {
+                // Different: one mirrored, one not (random which)
+                mirror1 = Math.random() > 0.5;
+                mirror2 = !mirror1;
+            }
 
             pairs.push({
                 symbol: baseSymbol,
                 rot1: rot1,
                 rot2: rot2,
-                mirror: isMirror
+                mirror1: mirror1,
+                mirror2: mirror2
             });
             if (isMatch) matchCount++;
         }
@@ -627,10 +642,10 @@ function showQuestionModal(idx) {
     } else if (q.type === 'spatial') {
         let spHtml = '<div class="modal-spatial">';
         q.pairs.forEach(p => {
-            let isRotationOnly = !p.mirror;
-            spHtml += `<div class="modal-sp-pair ${isRotationOnly ? 'match' : ''}">
-                <div style="transform: rotate(${p.rot1}deg); font-size: 36px; font-weight: bold;">${p.symbol}</div>
-                <div style="transform: rotate(${p.rot2}deg) ${p.mirror ? 'scaleX(-1)' : ''}; font-size: 36px; font-weight: bold;">${p.symbol}</div>
+            let isMatch = p.mirror1 === p.mirror2;
+            spHtml += `<div class="modal-sp-pair ${isMatch ? 'match' : ''}">
+                <div style="transform: rotate(${p.rot1}deg) ${p.mirror1 ? 'scaleX(-1)' : ''}; font-size: 36px; font-weight: bold;">${p.symbol}</div>
+                <div style="transform: rotate(${p.rot2}deg) ${p.mirror2 ? 'scaleX(-1)' : ''}; font-size: 36px; font-weight: bold;">${p.symbol}</div>
             </div>`;
         });
         spHtml += '</div>';
@@ -1102,8 +1117,8 @@ function render() {
             let html = '<div class="spatial-pairs">';
             q.pairs.forEach(p => {
                 html += `<div class="spatial-pair">
-                    <div class="spatial-symbol" style="transform: rotate(${p.rot1}deg)">${p.symbol}</div>
-                    <div class="spatial-symbol" style="transform: rotate(${p.rot2}deg) ${p.mirror ? 'scaleX(-1)' : ''}">${p.symbol}</div>
+                    <div class="spatial-symbol" style="transform: rotate(${p.rot1}deg) ${p.mirror1 ? 'scaleX(-1)' : ''}">${p.symbol}</div>
+                    <div class="spatial-symbol" style="transform: rotate(${p.rot2}deg) ${p.mirror2 ? 'scaleX(-1)' : ''}">${p.symbol}</div>
                 </div>`;
             });
             html += '</div>';
