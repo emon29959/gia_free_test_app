@@ -779,13 +779,51 @@ function goHome() {
 }
 window.goHome = goHome;
 
+function goBack() {
+    // Navigate to the logical previous screen
+    switch (state.mode) {
+        case 'history':
+            goHome();
+            break;
+        case 'historyDetail':
+            state.mode = 'history';
+            render();
+            break;
+        case 'intro':
+            clearInterval(state.timerInterval);
+            goHome();
+            break;
+        case 'final':
+            goHome();
+            break;
+        default:
+            goHome();
+    }
+}
+window.goBack = goBack;
+
 function injectHomeButton() {
+    const nav = document.createElement('div');
+    nav.className = 'nav-buttons';
+
+    // Back button — show on all screens except test (exam running)
+    if (state.mode !== 'test') {
+        const backBtn = document.createElement('button');
+        backBtn.className = 'back-btn';
+        backBtn.setAttribute('title', 'Go Back');
+        backBtn.innerHTML = '← Back';
+        backBtn.onclick = goBack;
+        nav.appendChild(backBtn);
+    }
+
     const btn = document.createElement('button');
     btn.className = 'home-btn';
     btn.setAttribute('title', 'Go Home');
     btn.innerHTML = HOME_SVG;
     btn.onclick = goHome;
-    appContainer.appendChild(btn);
+    nav.appendChild(btn);
+
+    appContainer.appendChild(nav);
 }
 
 function buildProgressDots() {
@@ -1099,52 +1137,53 @@ function render() {
         const dateStr = d.toLocaleDateString([], {year: 'numeric', month: 'short', day: 'numeric'});
         const incorrectCount = h.total - h.correct;
 
-        screen.innerHTML = `
-            <div class="results-container">
-                <div class="results-summary">
-                    <h2>${h.category} <span class="history-mode ${h.mode}" style="font-size: 12px; vertical-align: middle;">${h.mode.toUpperCase()}</span></h2>
-                    <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">${dateStr} at ${timeStr}</p>
-                    <div class="stat-row">
-                        <div class="stat-card">
-                            <div class="stat-value">${h.total}</div>
-                            <div class="stat-label">Attempted</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" style="color: var(--success)">${h.correct}</div>
-                            <div class="stat-label">Correct</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" style="color: var(--danger)">${incorrectCount}</div>
-                            <div class="stat-label">Wrong</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" style="color: var(--warning)">${h.accuracy}%</div>
-                            <div class="stat-label">Accuracy</div>
+        appContainer.innerHTML = `
+            <div class="screen active">
+                <div class="results-container">
+                    <div class="results-summary">
+                        <h2>${h.category} <span class="history-mode ${h.mode}" style="font-size: 12px; vertical-align: middle;">${h.mode.toUpperCase()}</span></h2>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">${dateStr} at ${timeStr}</p>
+                        <div class="stat-row">
+                            <div class="stat-card">
+                                <div class="stat-value">${h.total}</div>
+                                <div class="stat-label">Attempted</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: var(--success)">${h.correct}</div>
+                                <div class="stat-label">Correct</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: var(--danger)">${incorrectCount}</div>
+                                <div class="stat-label">Wrong</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: var(--warning)">${h.accuracy}%</div>
+                                <div class="stat-label">Accuracy</div>
+                            </div>
                         </div>
                     </div>
+                    <div class="results-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Question</th>
+                                    <th>Yours</th>
+                                    <th>Correct</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn" style="margin-top: 0;" onclick="state.mode='history'; render();">← Back to Results</button>
                 </div>
-                <div class="results-table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Question</th>
-                                <th>Yours</th>
-                                <th>Correct</th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
-                        </tbody>
-                    </table>
-                </div>
-                <button class="btn" style="margin-top: 0;" onclick="state.mode='history'; render();">← Back to Results</button>
             </div>
         `;
         injectHomeButton();
-        appContainer.appendChild(screen);
         return;
     }
     

@@ -74,11 +74,17 @@ body {
     backdrop-filter: blur(10px);
 }
 
-/* ─── HOME BUTTON ─── */
-.home-btn {
+/* ─── NAV BUTTONS (Back + Home) ─── */
+.nav-buttons {
     position: absolute;
     top: 18px;
     left: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.home-btn {
     width: 42px;
     height: 42px;
     border: none;
@@ -90,7 +96,6 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.25s ease;
-    z-index: 10;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -114,6 +119,35 @@ body {
 
 .home-btn:hover svg {
     fill: white;
+}
+
+.back-btn {
+    height: 42px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:hover {
+    background: rgba(37,99,235,0.12);
+    border-color: var(--primary);
+    color: var(--text);
+    transform: scale(1.03);
+}
+
+.back-btn:active {
+    transform: scale(0.95);
 }
 
 /* ─── SCREENS ─── */
@@ -1412,8 +1446,10 @@ tr:hover {
     .spatial-symbol { width: 60px; height: 60px; font-size: 48px; }
     .stat-card { padding: 12px 18px; min-width: 90px; }
     .stat-card .stat-value { font-size: 24px; }
-    .home-btn { width: 36px; height: 36px; top: 14px; left: 14px; border-radius: 10px; }
+    .nav-buttons { top: 14px; left: 14px; gap: 6px; }
+    .home-btn { width: 36px; height: 36px; border-radius: 10px; }
     .home-btn svg { width: 17px; height: 17px; }
+    .back-btn { height: 36px; font-size: 12px; padding: 0 10px; border-radius: 10px; }
 }
 
 @media (max-width: 480px) {
@@ -1442,7 +1478,9 @@ tr:hover {
     .results-summary h2 { font-size: 22px; }
     th, td { padding: 8px 10px; font-size: 11px; }
     table { min-width: 400px; }
-    .home-btn { top: 10px; left: 10px; width: 34px; height: 34px; }
+    .nav-buttons { top: 10px; left: 10px; gap: 5px; }
+    .home-btn { width: 34px; height: 34px; }
+    .back-btn { height: 34px; font-size: 11px; padding: 0 8px; }
     .modal-overlay { padding: 10px; }
     .modal-card { padding: 20px 16px; border-radius: 12px; max-height: 85vh; }
     .modal-header { font-size: 16px; }
