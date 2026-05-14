@@ -790,8 +790,14 @@ function goBack() {
             render();
             break;
         case 'intro':
+            // No confirm needed — user hasn't started answering yet
             clearInterval(state.timerInterval);
-            goHome();
+            state.mode = 'home';
+            state.answerHistory = [];
+            state.currentTaskIndex = 0;
+            state.currentQuestionIndex = 0;
+            state.reasoningPhase = 'statement';
+            render();
             break;
         case 'final':
             goHome();
