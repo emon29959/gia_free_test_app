@@ -466,8 +466,10 @@ const TASKS = [
     { id: 'spatial', title: 'Task 5: Spatial Visualisation', timeLimit: 120 } // 2 mins
 ];
 
+let sessionHistory = []; // Array of completed test result snapshots
+
 let state = {
-    mode: 'home', // home, intro, test, result, final
+    mode: 'home', // home, intro, test, result, final, history, historyDetail
     selectedCategory: 'all',
     testMode: 'practice', // practice, exam
     
@@ -482,7 +484,8 @@ let state = {
     timerInterval: null,
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
-    includeExtraSymbols: true // include symbols & shapes in spatial questions
+    includeExtraSymbols: true, // include symbols & shapes in spatial questions
+    viewingHistoryIndex: -1 // index into sessionHistory for detail view
 };
 
 // --- LOGIC ---
@@ -596,8 +599,9 @@ window.handleAnswer = handleAnswer;
 
 // --- QUESTION REVIEW MODAL ---
 
-function showQuestionModal(idx) {
-    const ans = state.answerHistory[idx];
+function showQuestionModal(idx, historyAnswers) {
+    const answers = historyAnswers || state.answerHistory;
+    const ans = answers[idx];
     const q = ans.questionData;
     if (!q) return;
 
@@ -701,12 +705,44 @@ window.reasoningReady = reasoningReady;
 function finishTask() {
     state.currentTaskIndex++;
     if (state.currentTaskIndex >= state.taskQueue.length) {
+        // Save this completed session to history
+        const correctCount = state.answerHistory.filter(a => a.isCorrect).length;
+        const totalAns = state.answerHistory.length;
+        sessionHistory.push({
+            timestamp: new Date(),
+            category: state.selectedCategory === 'all' ? 'Full Test' : state.taskQueue[0].title,
+            mode: state.testMode,
+            total: totalAns,
+            correct: correctCount,
+            accuracy: totalAns > 0 ? Math.round((correctCount / totalAns) * 100) : 0,
+            answerHistory: JSON.parse(JSON.stringify(state.answerHistory))
+        });
         state.mode = 'final';
     } else {
         state.mode = 'intro';
     }
     render();
 }
+
+function showHistory() {
+    state.mode = 'history';
+    render();
+}
+window.showHistory = showHistory;
+
+function viewHistoryDetail(idx) {
+    state.viewingHistoryIndex = idx;
+    state.mode = 'historyDetail';
+    render();
+}
+window.viewHistoryDetail = viewHistoryDetail;
+
+function deleteHistoryItem(idx) {
+    if (!confirm('Delete this result?')) return;
+    sessionHistory.splice(idx, 1);
+    render();
+}
+window.deleteHistoryItem = deleteHistoryItem;
 
 function formatTime(seconds) {
     let mins = Math.floor(seconds / 60);
@@ -919,6 +955,10 @@ function render() {
                     </div>
                     
                     <button class="btn" onclick="startApp()">Start Session</button>
+                    <button class="btn btn-history" onclick="showHistory()">
+                        📋 Test Results
+                        ${sessionHistory.length > 0 ? '<span class="history-badge">' + sessionHistory.length + '</span>' : ''}
+                    </button>
                 </div>
 
                 <div class="tips-section">
@@ -987,6 +1027,124 @@ function render() {
             </div>
         `;
         buildCharGrid();
+        return;
+    }
+
+    // ═══════════ HISTORY LIST SCREEN ═══════════
+    if (state.mode === 'history') {
+        let rows = '';
+        if (sessionHistory.length === 0) {
+            rows = '<div class="history-empty">📭 No test results yet.<br>Complete a session to see your history here.</div>';
+        } else {
+            rows = sessionHistory.map((h, idx) => {
+                const d = h.timestamp;
+                const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                const dateStr = d.toLocaleDateString([], {month: 'short', day: 'numeric'});
+                const accClass = h.accuracy >= 80 ? 'acc-high' : h.accuracy >= 50 ? 'acc-mid' : 'acc-low';
+                return `
+                    <div class="history-card" onclick="viewHistoryDetail(${idx})">
+                        <div class="history-card-top">
+                            <span class="history-cat">${h.category}</span>
+                            <span class="history-mode ${h.mode}">${h.mode.toUpperCase()}</span>
+                        </div>
+                        <div class="history-card-stats">
+                            <span class="history-stat"><strong>${h.correct}</strong>/${h.total}</span>
+                            <span class="history-acc ${accClass}">${h.accuracy}%</span>
+                        </div>
+                        <div class="history-card-bottom">
+                            <span class="history-time">${dateStr} ${timeStr}</span>
+                            <button class="history-del" onclick="event.stopPropagation(); deleteHistoryItem(${idx})" title="Delete">🗑</button>
+                        </div>
+                    </div>
+                `;
+            }).reverse().join('');
+        }
+
+        appContainer.innerHTML = `
+            <div class="home-scroll">
+                <div class="center-content" style="flex-grow:0;">
+                    <h1 style="font-size: 1.6rem;">📋 Test Results</h1>
+                    <p class="subtitle">Session history — ${sessionHistory.length} test${sessionHistory.length !== 1 ? 's' : ''} completed</p>
+                </div>
+                <div class="history-list">
+                    ${rows}
+                </div>
+                <button class="btn" style="margin-top: 12px;" onclick="goHome()">← Back to Home</button>
+            </div>
+        `;
+        injectHomeButton();
+        return;
+    }
+
+    // ═══════════ HISTORY DETAIL SCREEN ═══════════
+    if (state.mode === 'historyDetail') {
+        const h = sessionHistory[state.viewingHistoryIndex];
+        if (!h) { state.mode = 'history'; render(); return; }
+
+        const tableRows = h.answerHistory.map((ans, idx) => `
+            <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
+                <td>${idx + 1}</td>
+                <td>${ans.summary}</td>
+                <td>${ans.selected}</td>
+                <td>${ans.correct}</td>
+                <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
+                    ${ans.isCorrect ? '✔' : '✘'}
+                </td>
+                <td><button class="view-q-btn" onclick="showQuestionModal(${idx}, sessionHistory[${state.viewingHistoryIndex}].answerHistory)">View</button></td>
+            </tr>
+        `).join('');
+
+        const d = h.timestamp;
+        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        const dateStr = d.toLocaleDateString([], {year: 'numeric', month: 'short', day: 'numeric'});
+        const incorrectCount = h.total - h.correct;
+
+        screen.innerHTML = `
+            <div class="results-container">
+                <div class="results-summary">
+                    <h2>${h.category} <span class="history-mode ${h.mode}" style="font-size: 12px; vertical-align: middle;">${h.mode.toUpperCase()}</span></h2>
+                    <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">${dateStr} at ${timeStr}</p>
+                    <div class="stat-row">
+                        <div class="stat-card">
+                            <div class="stat-value">${h.total}</div>
+                            <div class="stat-label">Attempted</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--success)">${h.correct}</div>
+                            <div class="stat-label">Correct</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--danger)">${incorrectCount}</div>
+                            <div class="stat-label">Wrong</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--warning)">${h.accuracy}%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="results-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>Yours</th>
+                                <th>Correct</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn" style="margin-top: 0;" onclick="state.mode='history'; render();">← Back to Results</button>
+            </div>
+        `;
+        injectHomeButton();
+        appContainer.appendChild(screen);
         return;
     }
     

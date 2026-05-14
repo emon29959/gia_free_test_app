@@ -824,6 +824,152 @@ tr:hover {
     cursor: pointer;
 }
 
+/* ─── HISTORY BUTTON & LIST ─── */
+.btn-history {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.btn-history:hover {
+    border-color: var(--primary);
+    color: var(--text);
+    background: rgba(37,99,235,0.08);
+}
+
+.history-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    padding: 0 5px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.history-card {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.history-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-cat {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.history-mode {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.history-mode.practice {
+    background: rgba(16,185,129,0.15);
+    color: var(--success);
+}
+
+.history-mode.exam {
+    background: rgba(239,68,68,0.15);
+    color: var(--danger);
+}
+
+.history-card-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.history-stat {
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+.history-stat strong {
+    color: var(--text);
+    font-size: 24px;
+}
+
+.history-acc {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.acc-high { color: var(--success); }
+.acc-mid  { color: var(--warning); }
+.acc-low  { color: var(--danger); }
+
+.history-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-time {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.history-del {
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+    padding: 2px 6px;
+}
+
+.history-del:hover {
+    opacity: 1;
+}
+
+.history-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 40px 20px;
+    line-height: 2;
+}
+
 /* ─── TIPS & TRICKS SECTION ─── */
 .tips-section {
     width: 100%;
