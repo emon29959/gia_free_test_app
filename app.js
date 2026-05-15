@@ -71,6 +71,52 @@ function generateReasoningQuestions(count) {
                 ['more conductive', 'less conductive']
             ],
             whom: 'Which'
+        },
+        {
+            label: 'cities',
+            items: ['London', 'Paris', 'Tokyo', 'Berlin', 'Cairo', 'Sydney', 'Dubai',
+                    'Rome', 'Oslo', 'Lima', 'Seoul', 'Lagos', 'Delhi', 'Boston'],
+            adjs: [
+                ['larger', 'smaller'], ['more populated', 'less populated'],
+                ['older', 'newer'], ['more expensive', 'cheaper'],
+                ['hotter', 'colder'], ['noisier', 'quieter'],
+                ['more polluted', 'cleaner'], ['more touristy', 'less touristy']
+            ],
+            whom: 'Which'
+        },
+        {
+            label: 'gems',
+            items: ['Diamond', 'Ruby', 'Emerald', 'Sapphire', 'Opal', 'Topaz',
+                    'Garnet', 'Jade', 'Amber', 'Pearl', 'Quartz', 'Onyx'],
+            adjs: [
+                ['harder', 'softer'], ['rarer', 'more common'], ['more expensive', 'cheaper'],
+                ['shinier', 'duller'], ['heavier', 'lighter'], ['more transparent', 'more opaque'],
+                ['more colourful', 'plainer']
+            ],
+            whom: 'Which'
+        },
+        {
+            label: 'instruments',
+            items: ['Piano', 'Guitar', 'Violin', 'Drums', 'Flute', 'Trumpet',
+                    'Harp', 'Cello', 'Banjo', 'Organ', 'Tuba', 'Oboe'],
+            adjs: [
+                ['louder', 'quieter'], ['heavier', 'lighter'], ['higher-pitched', 'lower-pitched'],
+                ['larger', 'smaller'], ['more expensive', 'cheaper'],
+                ['older', 'newer'], ['more common', 'rarer']
+            ],
+            whom: 'Which'
+        },
+        {
+            label: 'sports',
+            items: ['Football', 'Tennis', 'Cricket', 'Boxing', 'Swimming', 'Golf',
+                    'Rugby', 'Hockey', 'Archery', 'Fencing', 'Rowing', 'Judo'],
+            adjs: [
+                ['more popular', 'less popular'], ['faster-paced', 'slower-paced'],
+                ['more dangerous', 'safer'], ['older', 'newer'],
+                ['more physical', 'less physical'], ['more expensive', 'cheaper'],
+                ['more strategic', 'less strategic']
+            ],
+            whom: 'Which'
         }
     ];
 
@@ -287,7 +333,21 @@ function generateWordMeaningQuestions(count) {
         ['urgent', 'pressing'], ['trivial', 'insignificant'], ['rare', 'scarce'],
         ['common', 'frequent'], ['rigid', 'stiff'], ['flexible', 'supple'],
         ['complex', 'intricate'], ['simple', 'basic'], ['vast', 'immense'],
-        ['narrow', 'slim'], ['shallow', 'superficial'], ['deep', 'profound']
+        ['narrow', 'slim'], ['shallow', 'superficial'], ['deep', 'profound'],
+        // Expanded set — ensures no repeats across sessions
+        ['wealthy', 'affluent'], ['absurd', 'ridiculous'], ['hostile', 'antagonistic'],
+        ['genuine', 'authentic'], ['lethal', 'deadly'], ['tranquil', 'peaceful'],
+        ['stubborn', 'obstinate'], ['prompt', 'punctual'], ['soggy', 'damp'],
+        ['rapid', 'swift'], ['hazardous', 'perilous'], ['plentiful', 'abundant'],
+        ['cunning', 'crafty'], ['cheerful', 'merry'], ['gloomy', 'dreary'],
+        ['fertile', 'productive'], ['barren', 'desolate'], ['miniature', 'diminutive'],
+        ['colossal', 'enormous'], ['precise', 'accurate'], ['vague', 'ambiguous'],
+        ['grateful', 'thankful'], ['hostile', 'unfriendly'], ['jubilant', 'elated'],
+        ['weary', 'fatigued'], ['hideous', 'ugly'], ['gorgeous', 'beautiful'],
+        ['nimble', 'agile'], ['clumsy', 'awkward'], ['sincere', 'earnest'],
+        ['deceitful', 'dishonest'], ['thrifty', 'frugal'], ['lavish', 'extravagant'],
+        ['renowned', 'famous'], ['obscure', 'unknown'], ['lethal', 'fatal'],
+        ['benign', 'harmless'], ['candid', 'frank'], ['reserved', 'restrained']
     ];
 
     const antonymPairs = [
@@ -301,7 +361,18 @@ function generateWordMeaningQuestions(count) {
         ['brave', 'cowardly'], ['sweet', 'bitter'], ['sharp', 'blunt'], ['wild', 'tame'],
         ['noisy', 'quiet'], ['empty', 'full'], ['heavy', 'light'], ['awake', 'asleep'],
         ['success', 'failure'], ['attack', 'defend'], ['guilty', 'innocent'],
-        ['visible', 'hidden'], ['accept', 'reject'], ['advance', 'retreat']
+        ['visible', 'hidden'], ['accept', 'reject'], ['advance', 'retreat'],
+        // Expanded set
+        ['calm', 'anxious'], ['polite', 'rude'], ['generous', 'stingy'],
+        ['honest', 'deceitful'], ['humble', 'proud'], ['create', 'destroy'],
+        ['expand', 'shrink'], ['arrive', 'depart'], ['borrow', 'lend'],
+        ['ancient', 'modern'], ['abundant', 'scarce'], ['temporary', 'permanent'],
+        ['artificial', 'natural'], ['domestic', 'foreign'], ['amateur', 'professional'],
+        ['optional', 'mandatory'], ['complex', 'simple'], ['fragile', 'sturdy'],
+        ['genuine', 'fake'], ['maximum', 'minimum'], ['majority', 'minority'],
+        ['frequent', 'rare'], ['interior', 'exterior'], ['superior', 'inferior'],
+        ['praise', 'criticise'], ['reward', 'punish'], ['export', 'import'],
+        ['connect', 'disconnect']
     ];
 
     // Unrelated words across multiple categories (the "odd one out" pool)
@@ -321,7 +392,14 @@ function generateWordMeaningQuestions(count) {
         // Materials
         'copper', 'marble', 'velvet', 'rubber', 'crystal', 'canvas',
         // Buildings
-        'castle', 'barn', 'chapel', 'tunnel', 'bridge', 'lighthouse'
+        'castle', 'barn', 'chapel', 'tunnel', 'bridge', 'lighthouse',
+        // Expanded categories — weather, tools, clothing, music, science
+        'thunder', 'rainbow', 'tornado', 'hailstone', 'monsoon', 'blizzard',
+        'hammer', 'chisel', 'pliers', 'wrench', 'shovel', 'anvil',
+        'jacket', 'sandal', 'mitten', 'bonnet', 'apron', 'scarf',
+        'violin', 'trumpet', 'cymbal', 'accordion', 'harmonica', 'xylophone',
+        'molecule', 'neutron', 'prism', 'magnet', 'circuit', 'pendulum',
+        'anchor', 'compass', 'lantern', 'goblet', 'telescope', 'sundial'
     ];
 
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -364,10 +442,11 @@ function generateSpatialQuestions(count, includeExtras) {
     // Removed: N,S,Z (180° rotational symmetry — mirror looks like rotation)
     // Removed: a,e,n,s,z (same issues in lowercase)
     // Removed: 3 (horizontally symmetric — top/bottom bumps are mirror images)
+    // Removed: 6 (rotational symmetry with 9 — 6 rotated 180° = 9; keep only one)
     const basePool = [
         'R', 'P', 'F', 'L', 'J', 'Q', 'G',
         'b', 'd', 'f', 'g', 'h', 'j', 'k', 'p', 'q', 'r', 'y',
-        '2', '4', '5', '6', '7', '9'
+        '2', '4', '5', '7', '9'
     ];
     // Extra pool: symbols and geometric shapes (all asymmetric)
     const extraPool = [
@@ -586,7 +665,9 @@ function handleAnswer(selected, correct) {
         selected: selected,
         correct: correct,
         isCorrect: selected === correct,
-        questionData: JSON.parse(JSON.stringify(q)) // store full question for review modal
+        questionData: JSON.parse(JSON.stringify(q)), // store full question for review modal
+        taskId: state.taskQueue[state.currentTaskIndex].id,
+        taskTitle: state.taskQueue[state.currentTaskIndex].title
     });
     
     state.currentQuestionIndex++;
@@ -1371,18 +1452,93 @@ function render() {
         let accuracy = totalAns > 0 ? Math.round((correctCount / totalAns) * 100) : 0;
         let incorrectCount = totalAns - correctCount;
         
-        let tableRows = state.answerHistory.map((ans, idx) => `
-            <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
-                <td>${idx + 1}</td>
-                <td>${ans.summary}</td>
-                <td>${ans.selected}</td>
-                <td>${ans.correct}</td>
-                <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
-                    ${ans.isCorrect ? '✔' : '✘'}
-                </td>
-                <td><button class="view-q-btn" onclick="showQuestionModal(${idx})">View</button></td>
-            </tr>
-        `).join('');
+        const isFullTest = state.selectedCategory === 'all';
+
+        // Build section-by-section breakdown for Full Test
+        let sectionsHtml = '';
+        if (isFullTest && totalAns > 0) {
+            // Group answers by task
+            const taskOrder = ['reasoning', 'perceptual', 'numbers', 'word', 'spatial'];
+            const taskNames = {
+                reasoning: 'Task 1: Reasoning',
+                perceptual: 'Task 2: Perceptual Speed',
+                numbers: 'Task 3: Number Speed',
+                word: 'Task 4: Word Meaning',
+                spatial: 'Task 5: Spatial Visualisation'
+            };
+
+            taskOrder.forEach(taskId => {
+                const sectionAnswers = state.answerHistory.filter(a => a.taskId === taskId);
+                if (sectionAnswers.length === 0) return;
+
+                const sCorrect = sectionAnswers.filter(a => a.isCorrect).length;
+                const sTotal = sectionAnswers.length;
+                const sWrong = sTotal - sCorrect;
+                const sAcc = sTotal > 0 ? Math.round((sCorrect / sTotal) * 100) : 0;
+                const accClass = sAcc >= 80 ? 'acc-high' : sAcc >= 50 ? 'acc-mid' : 'acc-low';
+
+                // Find the global index of each answer for the View modal
+                const sectionRows = sectionAnswers.map(ans => {
+                    const globalIdx = state.answerHistory.indexOf(ans);
+                    return `
+                        <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
+                            <td>${globalIdx + 1}</td>
+                            <td>${ans.summary}</td>
+                            <td>${ans.selected}</td>
+                            <td>${ans.correct}</td>
+                            <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
+                                ${ans.isCorrect ? '✔' : '✘'}
+                            </td>
+                            <td><button class="view-q-btn" onclick="showQuestionModal(${globalIdx})">View</button></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                sectionsHtml += `
+                    <div class="section-result">
+                        <button class="section-header" onclick="this.parentElement.classList.toggle('open')">
+                            <span class="section-title">${taskNames[taskId]}</span>
+                            <span class="section-stats">
+                                <span class="${accClass}" style="font-weight:700;">${sAcc}%</span>
+                                <span style="color:var(--text-muted); font-size:12px;">${sCorrect}/${sTotal}</span>
+                                <span class="section-chevron">›</span>
+                            </span>
+                        </button>
+                        <div class="section-body">
+                            <div class="stat-row" style="margin-bottom:10px;">
+                                <div class="stat-card"><div class="stat-value">${sTotal}</div><div class="stat-label">Attempted</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--success)">${sCorrect}</div><div class="stat-label">Correct</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${sWrong}</div><div class="stat-label">Wrong</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--warning)">${sAcc}%</div><div class="stat-label">Accuracy</div></div>
+                            </div>
+                            <div class="results-table-wrapper" style="max-height:200px;">
+                                <table>
+                                    <thead><tr><th>#</th><th>Question</th><th>Yours</th><th>Correct</th><th></th><th></th></tr></thead>
+                                    <tbody>${sectionRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // For single-task results, keep the original flat table
+        let tableRows = '';
+        if (!isFullTest) {
+            tableRows = state.answerHistory.map((ans, idx) => `
+                <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
+                    <td>${idx + 1}</td>
+                    <td>${ans.summary}</td>
+                    <td>${ans.selected}</td>
+                    <td>${ans.correct}</td>
+                    <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
+                        ${ans.isCorrect ? '✔' : '✘'}
+                    </td>
+                    <td><button class="view-q-btn" onclick="showQuestionModal(${idx})">View</button></td>
+                </tr>
+            `).join('');
+        }
 
         screen.innerHTML = `
             <div class="results-container">
@@ -1407,23 +1563,29 @@ function render() {
                         </div>
                     </div>
                 </div>
-                <div class="results-table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Question</th>
-                                <th>Yours</th>
-                                <th>Correct</th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
-                        </tbody>
-                    </table>
-                </div>
+                ${isFullTest ? `
+                    <div class="sections-breakdown">
+                        ${sectionsHtml}
+                    </div>
+                ` : `
+                    <div class="results-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Question</th>
+                                    <th>Yours</th>
+                                    <th>Correct</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
                 <div class="results-actions">
                     <button class="btn btn-retest" onclick="retest()">🔄 Retest</button>
                     <button class="btn btn-home-outline" onclick="goHome()">Back to Home</button>
