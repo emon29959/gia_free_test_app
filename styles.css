@@ -566,6 +566,40 @@ p {
     max-height: 320px;
 }
 
+.results-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.results-actions .btn {
+    margin-top: 0;
+    min-width: 140px;
+}
+
+.btn-retest {
+    background: linear-gradient(135deg, var(--success), #059669) !important;
+    box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+}
+
+.btn-retest:hover {
+    box-shadow: 0 6px 20px rgba(16,185,129,0.5);
+    transform: translateY(-2px);
+}
+
+.btn-home-outline {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+.btn-home-outline:hover {
+    border-color: var(--primary) !important;
+    color: var(--text) !important;
+    background: rgba(37,99,235,0.08) !important;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -980,6 +1014,12 @@ tr:hover {
 .history-time {
     font-size: 11px;
     color: var(--text-muted);
+}
+
+.history-duration {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .history-del {

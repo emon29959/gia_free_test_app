@@ -485,7 +485,8 @@ let state = {
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
     includeExtraSymbols: true, // include symbols & shapes in spatial questions
-    viewingHistoryIndex: -1 // index into sessionHistory for detail view
+    viewingHistoryIndex: -1, // index into sessionHistory for detail view
+    sessionStartTime: null // track when the session started
 };
 
 // --- LOGIC ---
@@ -513,6 +514,7 @@ function startApp() {
     
     state.currentTaskIndex = 0;
     state.answerHistory = [];
+    state.sessionStartTime = null;
     state.mode = 'intro';
     render();
 }
@@ -525,6 +527,7 @@ function startTask() {
     state.currentQuestionIndex = 0;
     state.reasoningPhase = 'statement';
     state.mode = 'test';
+    if (!state.sessionStartTime) state.sessionStartTime = Date.now();
     
     // Timer setup
     if (state.testMode === 'practice') {
@@ -708,6 +711,8 @@ function finishTask() {
         // Save this completed session to history
         const correctCount = state.answerHistory.filter(a => a.isCorrect).length;
         const totalAns = state.answerHistory.length;
+        const elapsedMs = state.sessionStartTime ? Date.now() - state.sessionStartTime : 0;
+        const elapsedSec = Math.round(elapsedMs / 1000);
         sessionHistory.push({
             timestamp: new Date(),
             category: state.selectedCategory === 'all' ? 'Full Test' : state.taskQueue[0].title,
@@ -715,6 +720,7 @@ function finishTask() {
             total: totalAns,
             correct: correctCount,
             accuracy: totalAns > 0 ? Math.round((correctCount / totalAns) * 100) : 0,
+            duration: elapsedSec,
             answerHistory: JSON.parse(JSON.stringify(state.answerHistory))
         });
         state.mode = 'final';
@@ -778,6 +784,23 @@ function goHome() {
     render();
 }
 window.goHome = goHome;
+
+function retest() {
+    // Restart with the exact same configuration
+    clearInterval(state.timerInterval);
+    if (state.selectedCategory === 'all') {
+        state.taskQueue = [...TASKS];
+    } else {
+        state.taskQueue = [TASKS.find(t => t.id === state.selectedCategory)];
+    }
+    state.currentTaskIndex = 0;
+    state.currentQuestionIndex = 0;
+    state.answerHistory = [];
+    state.reasoningPhase = 'statement';
+    state.mode = 'intro';
+    render();
+}
+window.retest = retest;
 
 function goBack() {
     // Navigate to the logical previous screen
@@ -1097,6 +1120,7 @@ function render() {
                         </div>
                         <div class="history-card-bottom">
                             <span class="history-time">${dateStr} ${timeStr}</span>
+                            <span class="history-duration">⏱ ${formatTime(h.duration || 0)}</span>
                             <button class="history-del" onclick="event.stopPropagation(); deleteHistoryItem(${idx})" title="Delete">🗑</button>
                         </div>
                     </div>
@@ -1148,7 +1172,7 @@ function render() {
                 <div class="results-container">
                     <div class="results-summary">
                         <h2>${h.category} <span class="history-mode ${h.mode}" style="font-size: 12px; vertical-align: middle;">${h.mode.toUpperCase()}</span></h2>
-                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">${dateStr} at ${timeStr}</p>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">${dateStr} at ${timeStr} · Duration: ${formatTime(h.duration || 0)}</p>
                         <div class="stat-row">
                             <div class="stat-card">
                                 <div class="stat-value">${h.total}</div>
@@ -1400,7 +1424,10 @@ function render() {
                         </tbody>
                     </table>
                 </div>
-                <button class="btn" style="margin-top: 0;" onclick="goHome()">Back to Home</button>
+                <div class="results-actions">
+                    <button class="btn btn-retest" onclick="retest()">🔄 Retest</button>
+                    <button class="btn btn-home-outline" onclick="goHome()">Back to Home</button>
+                </div>
             </div>
         `;
     }
