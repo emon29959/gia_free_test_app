@@ -238,40 +238,21 @@ function generatePerceptualSpeedQuestions(count) {
 }
 
 function generateNumberSpeedQuestions(count) {
-    // Difficulty tiers matching real GIA progression
-    const difficultyTiers = [
-        // Tier 1: Easy warm-up (single digits, clear gaps)
-        { minVal: 2, maxVal: 9, weight: 15 },
-        // Tier 2: Standard (small two-digit, moderate gaps)
-        { minVal: 3, maxVal: 19, weight: 25 },
-        // Tier 3: Tricky (wider range, closer margins)
-        { minVal: 5, maxVal: 30, weight: 25 },
-        // Tier 4: Hard (large numbers, tight differences)
-        { minVal: 10, maxVal: 50, weight: 20 },
-        // Tier 5: Very hard (big spread, requires fast mental math)
-        { minVal: 2, maxVal: 99, weight: 15 }
-    ];
-
-    // Build weighted pool
-    let tierPool = [];
-    difficultyTiers.forEach((tier, idx) => {
-        for (let w = 0; w < tier.weight; w++) tierPool.push(idx);
-    });
-
+    // All numbers are randomly generated in range 2–99
+    // 60% of questions have tight margins (≤3) for extra challenge
     const questions = [];
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
     for (let i = 0; i < count; i++) {
         let n1, n2, n3;
         let valid = false;
         let highest, lowest, remaining, distHigh, distLow;
-
-        // Pick a difficulty tier
-        let tierIdx = tierPool[Math.floor(Math.random() * tierPool.length)];
-        let tier = difficultyTiers[tierIdx];
+        const forceTight = Math.random() < 0.6; // 60% tight-margin questions
 
         while (!valid) {
-            n1 = Math.floor(Math.random() * (tier.maxVal - tier.minVal + 1)) + tier.minVal;
-            n2 = Math.floor(Math.random() * (tier.maxVal - tier.minVal + 1)) + tier.minVal;
-            n3 = Math.floor(Math.random() * (tier.maxVal - tier.minVal + 1)) + tier.minVal;
+            n1 = rand(2, 99);
+            n2 = rand(2, 99);
+            n3 = rand(2, 99);
 
             if (n1 === n2 || n1 === n3 || n2 === n3) continue;
 
@@ -286,10 +267,10 @@ function generateNumberSpeedQuestions(count) {
             // Reject equidistant (no valid answer)
             if (distLow === distHigh) continue;
 
-            // For harder tiers, prefer close margins (difference of 1-3)
-            if (tierIdx >= 3) {
+            // For tight questions, force the margin between distances to be ≤3
+            if (forceTight) {
                 let margin = Math.abs(distHigh - distLow);
-                if (margin > 5) continue; // Force tricky close margins
+                if (margin > 3) continue;
             }
 
             valid = true;
@@ -1230,23 +1211,96 @@ function render() {
         const h = sessionHistory[state.viewingHistoryIndex];
         if (!h) { state.mode = 'history'; render(); return; }
 
-        const tableRows = h.answerHistory.map((ans, idx) => `
-            <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
-                <td>${idx + 1}</td>
-                <td>${ans.summary}</td>
-                <td>${ans.selected}</td>
-                <td>${ans.correct}</td>
-                <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
-                    ${ans.isCorrect ? '✔' : '✘'}
-                </td>
-                <td><button class="view-q-btn" onclick="showQuestionModal(${idx}, sessionHistory[${state.viewingHistoryIndex}].answerHistory)">View</button></td>
-            </tr>
-        `).join('');
-
         const d = h.timestamp;
         const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
         const dateStr = d.toLocaleDateString([], {year: 'numeric', month: 'short', day: 'numeric'});
         const incorrectCount = h.total - h.correct;
+        const isFullTest = h.category === 'Full Test';
+        const histIdx = state.viewingHistoryIndex;
+
+        // Build section-by-section breakdown for Full Test history
+        let sectionsHtml = '';
+        if (isFullTest && h.answerHistory.length > 0) {
+            const taskOrder = ['reasoning', 'perceptual', 'numbers', 'word', 'spatial'];
+            const taskNames = {
+                reasoning: 'Task 1: Reasoning',
+                perceptual: 'Task 2: Perceptual Speed',
+                numbers: 'Task 3: Number Speed',
+                word: 'Task 4: Word Meaning',
+                spatial: 'Task 5: Spatial Visualisation'
+            };
+
+            taskOrder.forEach(taskId => {
+                const sectionAnswers = h.answerHistory.filter(a => a.taskId === taskId);
+                if (sectionAnswers.length === 0) return;
+
+                const sCorrect = sectionAnswers.filter(a => a.isCorrect).length;
+                const sTotal = sectionAnswers.length;
+                const sWrong = sTotal - sCorrect;
+                const sAcc = sTotal > 0 ? Math.round((sCorrect / sTotal) * 100) : 0;
+                const accClass = sAcc >= 80 ? 'acc-high' : sAcc >= 50 ? 'acc-mid' : 'acc-low';
+
+                const sectionRows = sectionAnswers.map(ans => {
+                    const globalIdx = h.answerHistory.indexOf(ans);
+                    return `
+                        <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
+                            <td>${globalIdx + 1}</td>
+                            <td>${ans.summary}</td>
+                            <td>${ans.selected}</td>
+                            <td>${ans.correct}</td>
+                            <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
+                                ${ans.isCorrect ? '✔' : '✘'}
+                            </td>
+                            <td><button class="view-q-btn" onclick="showQuestionModal(${globalIdx}, sessionHistory[${histIdx}].answerHistory)">View</button></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                sectionsHtml += `
+                    <div class="section-result">
+                        <button class="section-header" onclick="this.parentElement.classList.toggle('open')">
+                            <span class="section-title">${taskNames[taskId]}</span>
+                            <span class="section-stats">
+                                <span class="${accClass}" style="font-weight:700;">${sAcc}%</span>
+                                <span style="color:var(--text-muted); font-size:12px;">${sCorrect}/${sTotal}</span>
+                                <span class="section-chevron">›</span>
+                            </span>
+                        </button>
+                        <div class="section-body">
+                            <div class="stat-row" style="margin-bottom:10px;">
+                                <div class="stat-card"><div class="stat-value">${sTotal}</div><div class="stat-label">Attempted</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--success)">${sCorrect}</div><div class="stat-label">Correct</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${sWrong}</div><div class="stat-label">Wrong</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--warning)">${sAcc}%</div><div class="stat-label">Accuracy</div></div>
+                            </div>
+                            <div class="results-table-wrapper" style="max-height:200px;">
+                                <table>
+                                    <thead><tr><th>#</th><th>Question</th><th>Yours</th><th>Correct</th><th></th><th></th></tr></thead>
+                                    <tbody>${sectionRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // For single-task history, keep the flat table
+        let tableRows = '';
+        if (!isFullTest) {
+            tableRows = h.answerHistory.map((ans, idx) => `
+                <tr class="${ans.isCorrect ? 'correct-row' : 'incorrect-row'}">
+                    <td>${idx + 1}</td>
+                    <td>${ans.summary}</td>
+                    <td>${ans.selected}</td>
+                    <td>${ans.correct}</td>
+                    <td class="status-icon ${ans.isCorrect ? 'correct' : 'incorrect'}">
+                        ${ans.isCorrect ? '✔' : '✘'}
+                    </td>
+                    <td><button class="view-q-btn" onclick="showQuestionModal(${idx}, sessionHistory[${histIdx}].answerHistory)">View</button></td>
+                </tr>
+            `).join('');
+        }
 
         appContainer.innerHTML = `
             <div class="screen active">
@@ -1273,23 +1327,29 @@ function render() {
                             </div>
                         </div>
                     </div>
-                    <div class="results-table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Question</th>
-                                    <th>Yours</th>
-                                    <th>Correct</th>
-                                    <th></th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${isFullTest ? `
+                        <div class="sections-breakdown">
+                            ${sectionsHtml}
+                        </div>
+                    ` : `
+                        <div class="results-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Question</th>
+                                        <th>Yours</th>
+                                        <th>Correct</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" style="text-align:center; color: var(--text-muted)">No questions answered.</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
                     <button class="btn" style="margin-top: 0;" onclick="state.mode='history'; render();">← Back to Results</button>
                 </div>
             </div>
