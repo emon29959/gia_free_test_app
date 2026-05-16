@@ -1,5 +1,25 @@
 // GIA Assessment Practice App
 
+function calculateGIAScore(answers) {
+    let score = 0;
+    const penalties = {
+        'reasoning': 1.0,
+        'perceptual': 0.25,
+        'numbers': 0.5,
+        'word': 0.5,
+        'spatial': 0.5
+    };
+    answers.forEach(ans => {
+        if (ans.isCorrect) {
+            score += 1;
+        } else {
+            let penalty = penalties[ans.taskId] || 0.5;
+            score -= penalty;
+        }
+    });
+    return Number(score.toFixed(2));
+}
+
 // --- QUESTION GENERATORS ---
 // (Keep the same procedural generators)
 
@@ -1179,6 +1199,7 @@ function render() {
                         <div class="history-card-stats">
                             <span class="history-stat"><strong>${h.correct}</strong>/${h.total}</span>
                             <span class="history-acc ${accClass}">${h.accuracy}%</span>
+                            <span class="history-score" style="color:var(--primary); font-weight:700;">⭐ ${calculateGIAScore(h.answerHistory)}</span>
                         </div>
                         <div class="history-card-bottom">
                             <span class="history-time">${dateStr} ${timeStr}</span>
@@ -1239,6 +1260,7 @@ function render() {
                 const sWrong = sTotal - sCorrect;
                 const sAcc = sTotal > 0 ? Math.round((sCorrect / sTotal) * 100) : 0;
                 const accClass = sAcc >= 80 ? 'acc-high' : sAcc >= 50 ? 'acc-mid' : 'acc-low';
+                const sScore = calculateGIAScore(sectionAnswers);
 
                 const sectionRows = sectionAnswers.map(ans => {
                     const globalIdx = h.answerHistory.indexOf(ans);
@@ -1272,6 +1294,7 @@ function render() {
                                 <div class="stat-card"><div class="stat-value" style="color:var(--success)">${sCorrect}</div><div class="stat-label">Correct</div></div>
                                 <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${sWrong}</div><div class="stat-label">Wrong</div></div>
                                 <div class="stat-card"><div class="stat-value" style="color:var(--warning)">${sAcc}%</div><div class="stat-label">Accuracy</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--primary)">${sScore}</div><div class="stat-label">Score</div></div>
                             </div>
                             <div class="results-table-wrapper" style="max-height:200px;">
                                 <table>
@@ -1324,6 +1347,10 @@ function render() {
                             <div class="stat-card">
                                 <div class="stat-value" style="color: var(--warning)">${h.accuracy}%</div>
                                 <div class="stat-label">Accuracy</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: var(--primary)">${calculateGIAScore(h.answerHistory)}</div>
+                                <div class="stat-label">GIA Score</div>
                             </div>
                         </div>
                     </div>
@@ -1536,6 +1563,7 @@ function render() {
                 const sWrong = sTotal - sCorrect;
                 const sAcc = sTotal > 0 ? Math.round((sCorrect / sTotal) * 100) : 0;
                 const accClass = sAcc >= 80 ? 'acc-high' : sAcc >= 50 ? 'acc-mid' : 'acc-low';
+                const sScore = calculateGIAScore(sectionAnswers);
 
                 // Find the global index of each answer for the View modal
                 const sectionRows = sectionAnswers.map(ans => {
@@ -1570,6 +1598,7 @@ function render() {
                                 <div class="stat-card"><div class="stat-value" style="color:var(--success)">${sCorrect}</div><div class="stat-label">Correct</div></div>
                                 <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${sWrong}</div><div class="stat-label">Wrong</div></div>
                                 <div class="stat-card"><div class="stat-value" style="color:var(--warning)">${sAcc}%</div><div class="stat-label">Accuracy</div></div>
+                                <div class="stat-card"><div class="stat-value" style="color:var(--primary)">${sScore}</div><div class="stat-label">Score</div></div>
                             </div>
                             <div class="results-table-wrapper" style="max-height:200px;">
                                 <table>
@@ -1620,6 +1649,10 @@ function render() {
                         <div class="stat-card">
                             <div class="stat-value" style="color: var(--warning)">${accuracy}%</div>
                             <div class="stat-label">Accuracy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--primary)">${calculateGIAScore(state.answerHistory)}</div>
+                            <div class="stat-label">GIA Score</div>
                         </div>
                     </div>
                 </div>
