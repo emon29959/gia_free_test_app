@@ -863,6 +863,7 @@ function goHome() {
     state.currentTaskIndex = 0;
     state.currentQuestionIndex = 0;
     state.reasoningPhase = 'statement';
+    state.sessionStartTime = null;
     render();
 }
 window.goHome = goHome;
@@ -879,6 +880,7 @@ function retest() {
     state.currentQuestionIndex = 0;
     state.answerHistory = [];
     state.reasoningPhase = 'statement';
+    state.sessionStartTime = null;
     state.mode = 'intro';
     render();
 }
