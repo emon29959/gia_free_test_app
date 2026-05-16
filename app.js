@@ -1203,7 +1203,7 @@ function render() {
                         </div>
                         <div class="history-card-bottom">
                             <span class="history-time">${dateStr} ${timeStr}</span>
-                            <span class="history-duration">⏱ ${formatTime(h.duration || 0)}</span>
+                            <span class="history-duration">⏱ ${formatTime(h.duration || 0)} (${h.total > 0 ? (h.duration / h.total).toFixed(1) : 0}s/q)</span>
                             <button class="history-del" onclick="event.stopPropagation(); deleteHistoryItem(${idx})" title="Delete">🗑</button>
                         </div>
                     </div>
@@ -1351,6 +1351,10 @@ function render() {
                             <div class="stat-card">
                                 <div class="stat-value" style="color: var(--primary)">${calculateGIAScore(h.answerHistory)}</div>
                                 <div class="stat-label">GIA Score</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: var(--text-muted)">${h.total > 0 ? (h.duration / h.total).toFixed(1) : 0}s</div>
+                                <div class="stat-label">Avg. Time/Q</div>
                             </div>
                         </div>
                     </div>
@@ -1538,6 +1542,9 @@ function render() {
         let totalAns = state.answerHistory.length;
         let accuracy = totalAns > 0 ? Math.round((correctCount / totalAns) * 100) : 0;
         let incorrectCount = totalAns - correctCount;
+        let lastSession = sessionHistory.length > 0 ? sessionHistory[sessionHistory.length - 1] : null;
+        let duration = lastSession ? lastSession.duration : 0;
+        let avgTime = totalAns > 0 ? (duration / totalAns).toFixed(1) : 0;
         
         const isFullTest = state.selectedCategory === 'all';
 
@@ -1653,6 +1660,10 @@ function render() {
                         <div class="stat-card">
                             <div class="stat-value" style="color: var(--primary)">${calculateGIAScore(state.answerHistory)}</div>
                             <div class="stat-label">GIA Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--text-muted)">${avgTime}s</div>
+                            <div class="stat-label">Avg. Time/Q</div>
                         </div>
                     </div>
                 </div>
