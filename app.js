@@ -258,21 +258,22 @@ function generatePerceptualSpeedQuestions(count) {
 }
 
 function generateNumberSpeedQuestions(count) {
-    // All numbers are randomly generated in range 2–99
-    // 60% of questions have tight margins (≤3) for extra challenge
     const questions = [];
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const hardMode = state.numbersHardMode;
 
     for (let i = 0; i < count; i++) {
         let n1, n2, n3;
         let valid = false;
         let highest, lowest, remaining, distHigh, distLow;
-        const forceTight = Math.random() < 0.6; // 60% tight-margin questions
+        // In hard mode, 60% are tight margin.
+        const forceTight = hardMode && Math.random() < 0.6; 
 
         while (!valid) {
-            n1 = rand(2, 99);
-            n2 = rand(2, 99);
-            n3 = rand(2, 99);
+            // Standard mode uses up to 50. Hard mode uses up to 99.
+            n1 = rand(2, hardMode ? 99 : 50);
+            n2 = rand(2, hardMode ? 99 : 50);
+            n3 = rand(2, hardMode ? 99 : 50);
 
             if (n1 === n2 || n1 === n3 || n2 === n3) continue;
 
@@ -565,6 +566,7 @@ let state = {
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
     includeExtraSymbols: true, // include symbols & shapes in spatial questions
+    numbersHardMode: true, // hard mode for numbers test
     viewingHistoryIndex: -1, // index into sessionHistory for detail view
     sessionStartTime: null // track when the session started
 };
@@ -581,10 +583,12 @@ function startApp() {
     }
     
     const extraSymCb = document.getElementById('extra-symbols-check');
+    const numHardCb = document.getElementById('numbers-hard-check');
     state.selectedCategory = categorySelect;
     state.testMode = modeSelect;
     state.customTimeLimit = customTime;
     state.includeExtraSymbols = extraSymCb ? extraSymCb.checked : true;
+    state.numbersHardMode = numHardCb ? numHardCb.checked : true;
     
     if (categorySelect === 'all') {
         state.taskQueue = [...TASKS];
@@ -845,6 +849,14 @@ window.toggleCustomTime = function(show) {
     }
 }
 
+window.updateCategoryOptions = function(val) {
+    state.selectedCategory = val;
+    const spOpt = document.getElementById('spatial-options');
+    const numOpt = document.getElementById('numbers-options');
+    if (spOpt) spOpt.style.display = ['all', 'spatial'].includes(val) ? 'block' : 'none';
+    if (numOpt) numOpt.style.display = ['all', 'numbers'].includes(val) ? 'block' : 'none';
+};
+
 // --- UI RENDERERS ---
 
 const appContainer = document.getElementById('app-container');
@@ -1070,13 +1082,13 @@ function render() {
                 <div class="setup-form">
                     <div class="form-group">
                         <label>Select Category</label>
-                        <select id="category-select">
-                            <option value="all">All Sections (Full Test)</option>
-                            <option value="reasoning">Task 1: Reasoning</option>
-                            <option value="perceptual">Task 2: Perceptual Speed</option>
-                            <option value="numbers">Task 3: Number Speed & Accuracy</option>
-                            <option value="word">Task 4: Word Meaning</option>
-                            <option value="spatial">Task 5: Spatial Visualisation</option>
+                        <select id="category-select" onchange="window.updateCategoryOptions(this.value)">
+                            <option value="all" ${state.selectedCategory === 'all' ? 'selected' : ''}>All Sections (Full Test)</option>
+                            <option value="reasoning" ${state.selectedCategory === 'reasoning' ? 'selected' : ''}>Task 1: Reasoning</option>
+                            <option value="perceptual" ${state.selectedCategory === 'perceptual' ? 'selected' : ''}>Task 2: Perceptual Speed</option>
+                            <option value="numbers" ${state.selectedCategory === 'numbers' ? 'selected' : ''}>Task 3: Number Speed & Accuracy</option>
+                            <option value="word" ${state.selectedCategory === 'word' ? 'selected' : ''}>Task 4: Word Meaning</option>
+                            <option value="spatial" ${state.selectedCategory === 'spatial' ? 'selected' : ''}>Task 5: Spatial Visualisation</option>
                         </select>
                     </div>
                     
@@ -1100,9 +1112,14 @@ function render() {
                         <small style="color: var(--text-muted); margin-top: 4px; font-size: 12px;">Leave at 0 for standard GIA times.</small>
                     </div>
 
-                    <div class="form-group">
-                        <label class="extra-sym-label"><input type="checkbox" id="extra-symbols-check" checked> Include symbols & shapes in Spatial questions</label>
+                    <div class="form-group" id="spatial-options" style="display: ${['all', 'spatial'].includes(state.selectedCategory) ? 'block' : 'none'};">
+                        <label class="extra-sym-label"><input type="checkbox" id="extra-symbols-check" ${state.includeExtraSymbols ? 'checked' : ''}> Include symbols & shapes in Spatial questions</label>
                         <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Uncheck for letters & numbers only (standard GIA).</small>
+                    </div>
+
+                    <div class="form-group" id="numbers-options" style="display: ${['all', 'numbers'].includes(state.selectedCategory) ? 'block' : 'none'};">
+                        <label class="extra-sym-label"><input type="checkbox" id="numbers-hard-check" ${state.numbersHardMode ? 'checked' : ''}> Hard Mode for Number Speed</label>
+                        <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Uncheck for standard GIA difficulty (wider margins, max 50).</small>
                     </div>
                     
                     <button class="btn" onclick="startApp()">Start Session</button>
