@@ -260,20 +260,24 @@ function generatePerceptualSpeedQuestions(count) {
 function generateNumberSpeedQuestions(count) {
     const questions = [];
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    const hardMode = state.numbersHardMode;
+    const difficulty = state.numbersDifficulty;
 
     for (let i = 0; i < count; i++) {
         let n1, n2, n3;
         let valid = false;
         let highest, lowest, remaining, distHigh, distLow;
-        // In hard mode, 60% are tight margin.
-        const forceTight = hardMode && Math.random() < 0.6; 
+
+        let maxVal = 50;
+        if (difficulty === 'hard') maxVal = 99;
+        if (difficulty === 'intermediate') maxVal = 30;
+
+        const isHardTight = difficulty === 'hard' && Math.random() < 0.6;
+        const isIntermediateTight = difficulty === 'intermediate'; // 100% tight 1-4 margin
 
         while (!valid) {
-            // Standard mode uses up to 50. Hard mode uses up to 99.
-            n1 = rand(2, hardMode ? 99 : 50);
-            n2 = rand(2, hardMode ? 99 : 50);
-            n3 = rand(2, hardMode ? 99 : 50);
+            n1 = rand(2, maxVal);
+            n2 = rand(2, maxVal);
+            n3 = rand(2, maxVal);
 
             if (n1 === n2 || n1 === n3 || n2 === n3) continue;
 
@@ -288,9 +292,11 @@ function generateNumberSpeedQuestions(count) {
             // Reject equidistant (no valid answer)
             if (distLow === distHigh) continue;
 
-            // For tight questions, force the margin between distances to be ≤3
-            if (forceTight) {
-                let margin = Math.abs(distHigh - distLow);
+            let margin = Math.abs(distHigh - distLow);
+
+            if (isIntermediateTight) {
+                if (margin < 1 || margin > 4) continue;
+            } else if (isHardTight) {
                 if (margin > 3) continue;
             }
 
@@ -552,7 +558,7 @@ let sessionHistory = []; // Array of completed test result snapshots
 let state = {
     mode: 'home', // home, intro, test, result, final, history, historyDetail
     selectedCategory: 'all',
-    testMode: 'practice', // practice, exam
+    testMode: 'exam', // practice, exam
     
     taskQueue: [],
     currentTaskIndex: 0,
@@ -566,7 +572,7 @@ let state = {
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
     includeExtraSymbols: true, // include symbols & shapes in spatial questions
-    numbersHardMode: true, // hard mode for numbers test
+    numbersDifficulty: 'hard', // standard, intermediate, hard
     viewingHistoryIndex: -1, // index into sessionHistory for detail view
     sessionStartTime: null // track when the session started
 };
@@ -583,12 +589,12 @@ function startApp() {
     }
     
     const extraSymCb = document.getElementById('extra-symbols-check');
-    const numHardCb = document.getElementById('numbers-hard-check');
+    const numDiffSelect = document.getElementById('numbers-difficulty-select');
     state.selectedCategory = categorySelect;
     state.testMode = modeSelect;
     state.customTimeLimit = customTime;
     state.includeExtraSymbols = extraSymCb ? extraSymCb.checked : true;
-    state.numbersHardMode = numHardCb ? numHardCb.checked : true;
+    state.numbersDifficulty = numDiffSelect ? numDiffSelect.value : 'hard';
     
     if (categorySelect === 'all') {
         state.taskQueue = [...TASKS];
@@ -1096,17 +1102,17 @@ function render() {
                         <label>Test Mode</label>
                         <div class="radio-group">
                             <label class="radio-label">
-                                <input type="radio" name="test-mode" value="practice" onchange="window.toggleCustomTime(false)" checked>
+                                <input type="radio" name="test-mode" value="practice" onchange="window.toggleCustomTime(false)" ${state.testMode === 'practice' ? 'checked' : ''}>
                                 Practice
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="test-mode" value="exam" onchange="window.toggleCustomTime(true)">
+                                <input type="radio" name="test-mode" value="exam" onchange="window.toggleCustomTime(true)" ${state.testMode === 'exam' ? 'checked' : ''}>
                                 Exam
                             </label>
                         </div>
                     </div>
                     
-                    <div class="form-group" id="custom-time-group" style="display: none;">
+                    <div class="form-group" id="custom-time-group" style="display: ${state.testMode === 'exam' ? 'flex' : 'none'};">
                         <label>Custom Time Limit (minutes)</label>
                         <input type="number" id="custom-time-input" min="0" step="0.5" value="0">
                         <small style="color: var(--text-muted); margin-top: 4px; font-size: 12px;">Leave at 0 for standard GIA times.</small>
@@ -1118,8 +1124,12 @@ function render() {
                     </div>
 
                     <div class="form-group" id="numbers-options" style="display: ${['all', 'numbers'].includes(state.selectedCategory) ? 'block' : 'none'};">
-                        <label class="extra-sym-label"><input type="checkbox" id="numbers-hard-check" ${state.numbersHardMode ? 'checked' : ''}> Hard Mode for Number Speed</label>
-                        <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Uncheck for standard GIA difficulty (wider margins, max 50).</small>
+                        <label>Number Speed Difficulty</label>
+                        <select id="numbers-difficulty-select">
+                            <option value="standard" ${state.numbersDifficulty === 'standard' ? 'selected' : ''}>Standard GIA (Max 50, Random Margins)</option>
+                            <option value="intermediate" ${state.numbersDifficulty === 'intermediate' ? 'selected' : ''}>Intermediate (Max 30, Margin 1-4)</option>
+                            <option value="hard" ${state.numbersDifficulty === 'hard' ? 'selected' : ''}>Hard (Max 99, 60% Tight Margins)</option>
+                        </select>
                     </div>
                     
                     <button class="btn" onclick="startApp()">Start Session</button>
