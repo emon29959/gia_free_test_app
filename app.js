@@ -470,7 +470,10 @@ function generateSpatialQuestions(count, includeExtras) {
         '\u2764', '\u266A', '\u266B', '\u2605',
         '\u2708', '\u2602', '\u2690', '\u2691'
     ];
-    const symbolPool = includeExtras ? [...basePool, ...extraPool] : basePool;
+    let symbolPool = includeExtras ? [...basePool, ...extraPool] : basePool;
+    if (state.spatialOnlyR) {
+        symbolPool = ['R'];
+    }
     // Finer rotation angles for more visual challenge
     const rotationAngles = [0, 45, 90, 135, 180, 225, 270, 315];
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -576,6 +579,7 @@ let state = {
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
     includeExtraSymbols: false, // include symbols & shapes in spatial questions
+    spatialOnlyR: false, // only use 'R' for spatial questions
     numbersDifficulty: 'intermediate', // standard, intermediate, hard
     viewingHistoryIndex: -1, // index into sessionHistory for detail view
     sessionStartTime: null // track when the session started
@@ -593,11 +597,13 @@ function startApp() {
     }
     
     const extraSymCb = document.getElementById('extra-symbols-check');
+    const onlyRCb = document.getElementById('spatial-only-r-check');
     const numDiffSelect = document.getElementById('numbers-difficulty-select');
     state.selectedCategory = categorySelect;
     state.testMode = modeSelect;
     state.customTimeLimit = customTime;
     state.includeExtraSymbols = extraSymCb ? extraSymCb.checked : false;
+    state.spatialOnlyR = onlyRCb ? onlyRCb.checked : false;
     state.numbersDifficulty = numDiffSelect ? numDiffSelect.value : 'intermediate';
     
     if (categorySelect === 'all') {
@@ -1123,8 +1129,9 @@ function render() {
                     </div>
 
                     <div class="form-group" id="spatial-options" style="display: ${['all', 'spatial'].includes(state.selectedCategory) ? 'block' : 'none'};">
-                        <label class="extra-sym-label"><input type="checkbox" id="extra-symbols-check" ${state.includeExtraSymbols ? 'checked' : ''}> Include symbols & shapes in Spatial questions</label>
-                        <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Uncheck for letters & numbers only (standard GIA).</small>
+                        <label class="extra-sym-label" style="display: block; margin-bottom: 8px;"><input type="checkbox" id="extra-symbols-check" ${state.includeExtraSymbols ? 'checked' : ''}> Include symbols & shapes in Spatial questions</label>
+                        <label class="extra-sym-label" style="display: block; margin-bottom: 8px;"><input type="checkbox" id="spatial-only-r-check" ${state.spatialOnlyR ? 'checked' : ''}> Use ONLY the letter 'R'</label>
+                        <small style="color: var(--text-muted); margin-top: 2px; font-size: 11px;">Checking 'Only R' overrides the extra symbols setting.</small>
                     </div>
 
                     <div class="form-group" id="numbers-options" style="display: ${['all', 'numbers'].includes(state.selectedCategory) ? 'block' : 'none'};">
