@@ -191,7 +191,9 @@ function generatePerceptualSpeedQuestions(count) {
     const confusablePairs = [
         ['b', 'd'], ['p', 'q'], ['m', 'n'], ['u', 'v'], ['i', 'l'],
         ['c', 'e'], ['f', 't'], ['g', 'q'], ['h', 'n'], ['o', 'c'],
-        ['r', 'n'], ['w', 'v'], ['s', 'z'], ['k', 'x']
+        ['r', 'n'], ['w', 'v'], ['s', 'z'], ['k', 'x'], ['o', 'q'], 
+        ['c', 'g'], ['e', 'f'], ['p', 'r'], ['b', 'p'], ['v', 'y'], 
+        ['m', 'w']
     ];
 
     const questions = [];
@@ -203,7 +205,8 @@ function generatePerceptualSpeedQuestions(count) {
         let pairs = [];
         let sameCount = 0;
         let displayStr = "";
-        let useConfusable = Math.random() > 0.4; // 60% chance of trickier chars
+        // Increase difficulty: 90% chance the question uses lookalike trickery
+        let useConfusable = Math.random() > 0.1; 
 
         for (let j = 0; j < numPairs; j++) {
             let l1, l2;
@@ -218,7 +221,8 @@ function generatePerceptualSpeedQuestions(count) {
                 l2 = Math.random() > 0.5 ? l2.toUpperCase() : l2;
                 sameCount++;
             } else {
-                if (useConfusable && Math.random() > 0.5) {
+                // 85% chance to use a confusable lookalike pair for mismatches
+                if (useConfusable && Math.random() > 0.15) {
                     // Use a visually confusable pair (tricky!)
                     let cp = confusablePairs[Math.floor(Math.random() * confusablePairs.length)];
                     l1 = Math.random() > 0.5 ? cp[0].toUpperCase() : cp[0];
