@@ -572,7 +572,7 @@ let state = {
     customTimeLimit: 0, // custom minutes set by user
     reasoningPhase: 'statement', // 'statement' or 'question' (Task 1 only)
     includeExtraSymbols: true, // include symbols & shapes in spatial questions
-    numbersDifficulty: 'hard', // standard, intermediate, hard
+    numbersDifficulty: 'intermediate', // standard, intermediate, hard
     viewingHistoryIndex: -1, // index into sessionHistory for detail view
     sessionStartTime: null // track when the session started
 };
@@ -594,7 +594,7 @@ function startApp() {
     state.testMode = modeSelect;
     state.customTimeLimit = customTime;
     state.includeExtraSymbols = extraSymCb ? extraSymCb.checked : true;
-    state.numbersDifficulty = numDiffSelect ? numDiffSelect.value : 'hard';
+    state.numbersDifficulty = numDiffSelect ? numDiffSelect.value : 'intermediate';
     
     if (categorySelect === 'all') {
         state.taskQueue = [...TASKS];
