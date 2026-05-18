@@ -570,6 +570,7 @@ let state = {
     taskQueue: [],
     currentTaskIndex: 0,
     currentQuestionIndex: 0,
+    currentQuestionAttempted: false,
     
     questions: [],
     answerHistory: [], // { summary, selected, correct, isCorrect }
@@ -615,6 +616,7 @@ function startApp() {
     state.currentTaskIndex = 0;
     state.answerHistory = [];
     state.sessionStartTime = null;
+    state.currentQuestionAttempted = false;
     state.mode = 'intro';
     render();
 }
@@ -678,19 +680,40 @@ function updateTimerDisplay() {
     }
 }
 
-function handleAnswer(selected, correct) {
+function handleAnswer(selected, correct, clickedElement) {
     const q = state.questions[state.currentQuestionIndex];
     
-    state.answerHistory.push({
-        summary: q.summary,
-        selected: selected,
-        correct: correct,
-        isCorrect: selected === correct,
-        questionData: JSON.parse(JSON.stringify(q)), // store full question for review modal
-        taskId: state.taskQueue[state.currentTaskIndex].id,
-        taskTitle: state.taskQueue[state.currentTaskIndex].title
-    });
+    if (!state.currentQuestionAttempted) {
+        state.answerHistory.push({
+            summary: q.summary,
+            selected: selected,
+            correct: correct,
+            isCorrect: selected === correct,
+            questionData: JSON.parse(JSON.stringify(q)), // store full question for review modal
+            taskId: state.taskQueue[state.currentTaskIndex].id,
+            taskTitle: state.taskQueue[state.currentTaskIndex].title
+        });
+    }
+
+    if (state.testMode === 'practice' && selected !== correct) {
+        state.currentQuestionAttempted = true;
+        if (clickedElement) {
+            clickedElement.style.backgroundColor = 'var(--danger)';
+            clickedElement.style.color = 'white';
+            clickedElement.style.borderColor = 'var(--danger)';
+        }
+        const buttons = document.querySelectorAll('.option-box');
+        buttons.forEach(b => {
+            if (b.innerText === correct) {
+                b.style.backgroundColor = 'var(--success)';
+                b.style.color = 'white';
+                b.style.borderColor = 'var(--success)';
+            }
+        });
+        return; // Wait for user to click correct answer
+    }
     
+    state.currentQuestionAttempted = false;
     state.currentQuestionIndex++;
     state.reasoningPhase = 'statement'; // Reset for next reasoning question
     if (state.currentQuestionIndex >= state.questions.length) {
@@ -892,6 +915,7 @@ function goHome() {
     state.currentQuestionIndex = 0;
     state.reasoningPhase = 'statement';
     state.sessionStartTime = null;
+    state.currentQuestionAttempted = false;
     render();
 }
 window.goHome = goHome;
@@ -909,6 +933,7 @@ function retest() {
     state.answerHistory = [];
     state.reasoningPhase = 'statement';
     state.sessionStartTime = null;
+    state.currentQuestionAttempted = false;
     state.mode = 'intro';
     render();
 }
@@ -1498,7 +1523,7 @@ function render() {
                     const btn = document.createElement('div');
                     btn.className = 'option-box';
                     btn.innerText = opt;
-                    btn.onclick = () => handleAnswer(opt, q.answer);
+                    btn.onclick = (e) => handleAnswer(opt, q.answer, e.currentTarget);
                     optionsArea.appendChild(btn);
                 });
                 qArea.appendChild(optionsArea);
@@ -1518,7 +1543,7 @@ function render() {
                 const btn = document.createElement('div');
                 btn.className = 'option-box';
                 btn.innerText = opt;
-                btn.onclick = () => handleAnswer(opt, q.answer);
+                btn.onclick = (e) => handleAnswer(opt, q.answer, e.currentTarget);
                 optionsArea.appendChild(btn);
             });
             qArea.appendChild(optionsArea);
@@ -1532,7 +1557,7 @@ function render() {
                 const btn = document.createElement('div');
                 btn.className = 'option-box';
                 btn.innerText = n;
-                btn.onclick = () => handleAnswer(n.toString(), q.answer);
+                btn.onclick = (e) => handleAnswer(n.toString(), q.answer, e.currentTarget);
                 optionsArea.appendChild(btn);
             });
             qArea.appendChild(optionsArea);
@@ -1546,7 +1571,7 @@ function render() {
                 const btn = document.createElement('div');
                 btn.className = 'option-box';
                 btn.innerText = opt;
-                btn.onclick = () => handleAnswer(opt, q.answer);
+                btn.onclick = (e) => handleAnswer(opt, q.answer, e.currentTarget);
                 optionsArea.appendChild(btn);
             });
             qArea.appendChild(optionsArea);
@@ -1568,7 +1593,7 @@ function render() {
                 const btn = document.createElement('div');
                 btn.className = 'option-box';
                 btn.innerText = opt;
-                btn.onclick = () => handleAnswer(opt, q.answer);
+                btn.onclick = (e) => handleAnswer(opt, q.answer, e.currentTarget);
                 optionsArea.appendChild(btn);
             });
             qArea.appendChild(optionsArea);
